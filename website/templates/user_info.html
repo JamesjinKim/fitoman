@@ -1,0 +1,105 @@
+{% extends "base.html" %} 
+{% block title %}User Info{% endblock %} 
+
+{% block content%}
+
+<div class="container">
+<div class="row">
+<div class="col-md-12">
+<div class="bg-light p-3">
+    <h3>사용자 정보 관리</h3>
+    <form>
+        <div class="row">
+            <div class="col">
+            <label for="userDepartmet">소속: {{user.udepartment}}</label>
+            </div>
+            <div class="col">
+            <label for="userPosition">직책: {{user.uposition}}</label>
+            </div>
+            <div class="col">
+            <label for="userName">성명: {{user.uname}}</label>
+            </div>
+        </div>
+    </form>
+        <table class="table table-hover table-striped" id="table1">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Email</th>
+                    <th>사용자 명</th>
+                    <th>소속부서</th>
+                    <th>직책</th>
+                    <th>권한</th>
+                    <th></th>
+                </tr>
+            </thead>
+            {% for row in all_data %}
+                <tbody>
+                    <tr>
+                        <td>{{row.id}}</td>
+                        <td>{{row.email}}</td>
+                        <td>{{row.uname}}</td>
+                        <td>{{row.udepartment}}</td>
+                        <td>{{row.uposition}}</td>
+                        <td>{{row.authority}}</td>
+                        <td>
+                        <a href="/auth.userinfo_update/{{row.id}}" class="btn btn-warning btn-xs" data-toggle="modal" data-target="#modaledit{{row.id}}">Edit</a>
+                        <a href="/userdelete/{{row.id}}" class="btn btn-danger btn-xs" onclick="return confirm('이 데이터를 삭제하시겠습니까?')">Delete</a>
+                        </td>
+                    </tr>
+                </tbody>
+                <!-- Model for updating user data -->
+                <div id="modaledit{{row.id}}" class="modal fade" role="dialog">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h4 class="modal-title"> Update User Data </h4>
+                            </div>
+                            <div class="modal-body">
+                                <form action="{{url_for('auth.userinfo_update')}}" method="POST">
+            
+                                    <div class="form-group">
+                                        <label>Email:</label>
+                                        <input type="hidden" name="id" value="{{row.id}}">
+                                        <input type="email" class="form-control" name="email" value="{{ row.email }}" required>
+                                    </div>
+            
+                                    <div class="form-group">
+                                        <label>이름</label>
+                                        <input type="text" class="form-control" name="uname" value="{{row.uname}}" required>
+                                    </div>
+            
+                                    <div class="form-group">
+                                        <label>소속</label>
+                                        <input type="text" class="form-control" name="udepartment" value="{{row.udepartment}}" required>
+                                    </div>
+            
+                                    <div class="form-group">
+                                        <label>직책</label>
+                                        <input type="text" class="form-control" name="uposition" value="{{row.uposition}}" required>                                        
+                                    </div>
+            
+                                    <div class="form-group">
+                                        <label>권한부여</label>
+                                        <input type="authority" class="form-control" name="authority" value="{{row.authority}}" required>
+                                    </div>
+            
+                                    <div class="modal-footer">
+                                        <button class="btn btn-info" type="submit"> Update</button>
+                                        <button class="btn btn-secondary" data-dismiss="modal">Close</button>
+                                    </div>
+            
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+                
+        </table>
+</div>
+</div>
+</div>
+</div>
+
+{% endblock %}

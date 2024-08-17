@@ -1,0 +1,37 @@
+{% extends "base.html" %} 
+{% block title %}Home{% endblock %} 
+
+{% block content%}
+<h3 align="center">공지사항</h3>
+<ul class="list-group list-group-flush" id="notes">
+  {% for note in all_data %}  <!--개인별 공지 user.notes-->
+  <li class="list-group-item">
+    {{ note.data }}/{{note.date}}//{{note.noteuname}}
+    {% if current_user.authority == '1' %}
+    <button type="button" class="close" onClick="delete_note({{ note.id }})">
+      <span aria-hidden="true">&times;</span>
+    </button>
+    {% endif %}
+  </li>
+  {% endfor %}
+</ul>
+<hr>
+<form method="POST">
+  <div class="row">
+    <div class="col">
+      <label for="userDepartmet">소속: {{user.udepartment}}</label>
+    </div>
+    <div class="col">
+      <label for="userPosition">직책: {{user.uposition}}</label>
+    </div>
+    <div class="col">
+      <label for="userName">성명: {{user.uname}}</label>
+    </div>
+  </div>
+  <textarea name="note" id="note" class="form-control"></textarea>
+  <br />
+  <div align="center">
+    <button type="submit" class="btn btn-primary">공지 등록</button>
+  </div>
+</form>
+{% endblock %}

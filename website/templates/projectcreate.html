@@ -1,0 +1,79 @@
+{% extends "base.html" %} 
+{% block title %}프로젝트 등록{% endblock %} 
+
+{% block content %}
+    <form method="POST">
+      <h3 align="center">프로젝트 등록</h3>
+        <div class="row">
+          <div class="col">
+            <label for="userDepartmet">소속: {{user.udepartment}}</label>
+          </div>
+          <div class="col">
+            <label for="userPosition">직책: {{user.uposition}}</label>
+          </div>
+          <div class="col">
+            <label for="userName">성명: {{user.uname}}</label>
+          </div>
+        </div>
+      <hr>
+      <div class="parent">
+        <div class="child">
+          <label for="projCode">프로젝트코드</label>
+          <input
+            type="text"
+            class="form-control"
+            id="projCode"
+            name="projCode"
+            placeholder="Enter project Code"
+          />
+        </div>
+        <div class="child">
+          <label for="projName">프로젝트명</label>
+          <input
+            type="text"
+            class="form-control"
+            id="projName"
+            name="projName"
+            placeholder="Enter Project Name"
+          />
+        </div>
+        <div>
+          <label for="description">프로젝트 설명</label>
+          <input
+            type="text"
+            class="form-control"
+            id="pdesc"
+            name="pdesc"
+            placeholder="필요시 프로젝트 설명을 작성하세요."
+          />
+        </div>
+      </div>
+      <br>
+      <div class="parent">
+        <div class="child1">
+        <label for="startDate">시작일&nbsp;&nbsp;</label>        
+        <input type="date" id="startDate" name="startDate" data-date-format="yymmdd">
+        </div>
+        <div class="child1">
+        <label for="endDate">종료일&nbsp;&nbsp;</label>        
+        <input type="date" id="endDate" name="endDate" data-date-format="yymmdd">
+        </div>
+        
+      </div>
+      <br>
+      <button type="submit" class="btn btn-primary">프로젝트 등록</button>
+    </form>
+    <br><hr>
+    <ul class="list-group list-group-flush" id="projects">
+      {% for data in all_data %}
+      <li class="list-group-item">
+        {{ data.pcode }}&nbsp;&nbsp;{{ data.pname}}&nbsp;&nbsp;{{ data.startdate}}&nbsp;&nbsp;{{ data.enddate }}&nbsp;&nbsp;{{data.user_id}}&nbsp;&nbsp;
+        <button type="button" class="btn btn-outline-dark" onClick="project_edit({{ data.pid }})">Edit</button>
+        <button type="button" class="close" onClick="project_delete({{ data.pid }})">  
+        <span aria-hidden="false">&times;</span>
+        </button>
+      </li>
+      {% endfor %}
+    </ul>
+    <br><br><hr><hr>
+  {% endblock %}
