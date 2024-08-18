@@ -131,22 +131,17 @@
 
                         <div class="form-group">
                             <label>프로젝트 코드</label>
-                            <select id="pcode" class="form-control" name="pcode">
+                            <select id="pcode" class="form-control" name="pcode" onchange="updatePname()">
                                 <option value="">선택하세요</option>
                                 {% for project in all_data %}
-                                    <option name="pcode" value="{{ project.pcode }}">{{ project.pcode }}</option>
+                                    <option value="{{ project.pcode }}">{{ project.pcode }}</option>
                                 {% endfor %}
                             </select>
                         </div>
 
                         <div class="form-group">
                             <label>프로젝트명</label>
-                            <select id="pname" class="form-control" name="pname">
-                                <option value="">선택하세요</option>
-                                {% for project in all_data %}
-                                    <option name="pname" value="{{ project.pname }}">{{ project.pname }}</option>
-                                {% endfor %}
-                            </select>
+                            <input type="text" class="form-control" id="pname" name="pname" value="">
                         </div>
 
                         <div class="form-group">
@@ -184,7 +179,28 @@
 </div>
 </div>
 
-<script>
+<!-- JavaScript 코드 -->
+<script type="text/javascript">
+    // Jinja2에서 전달된 데이터를 JavaScript 객체로 변환
+    var projectData = {
+        {% for project in all_data %}
+            "{{ project.pcode }}": "{{ project.pname }}",
+        {% endfor %}
+    };
+
+    // pcode 선택 시 pname 업데이트
+    function updatePname() {
+        var selectedPcode = document.getElementById("pcode").value;
+        var pnameInput = document.getElementById("pname");
+
+        if (selectedPcode in projectData) {
+            pnameInput.value = projectData[selectedPcode];
+        } else {
+            pnameInput.value = "";  // 선택이 없는 경우
+        }
+    }
+
+
     // 참여시간을 가진 모든 td 태그 선택
     const participationTimes = document.querySelectorAll('.participation-time');
 
@@ -205,3 +221,5 @@
 
 </script>
 {% endblock %}
+
+

@@ -61,7 +61,6 @@ def work_hour():
         msg = "Record successfully added to database"
         flash(msg, category='success')
     projects = Project.query.with_entities(Project.pcode,Project.pname).all()
-    print(projects)
     wh_data=Working_hour.query.all()
     return render_template("work_hour.html", task_list=task_list, all_data=projects,wh_data=wh_data, user=current_user)
 
