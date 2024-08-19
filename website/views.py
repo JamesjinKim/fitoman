@@ -4,7 +4,7 @@ from .models import Note, Project, Cocompany,Working_hour
 from . import db
 from sqlalchemy import func
 import json
-from datetime import date
+from datetime import date, timedelta
 
 views = Blueprint('views', __name__)
 
@@ -54,14 +54,20 @@ def work_hour():
         uname = request.form.get('username')
         jobpart = request.form.get('jobpart')
         workhour = request.form.get('workhour')
+        recodingdate = date.today()
         workhours = Working_hour(pcode=pcode,pname=pname,username=uname,
-                                 jobpart=jobpart,workhour=workhour,user_id=current_user.id )
+                                 jobpart=jobpart,workhour=workhour,recodingdate=recodingdate, user_id=current_user.id )
         db.session.add(workhours)
         db.session.commit()
         msg = "Record successfully added to database"
         flash(msg, category='success')
-    projects = Project.query.with_entities(Project.pcode,Project.pname).all()
-    wh_data=Working_hour.query.all()
+    
+    # 오늘, 어제 날짜
+    today = date.today()
+    yesterday = today - timedelta(days=6)
+    projects = Project.query.with_entities(Project.pcode,Project.pname).filter(Project.enddate > today).all()
+    wh_data=Working_hour.query.filter(Working_hour.recodingdate >= yesterday).all()
+    #wh_data=Working_hour.query.all()
     return render_template("work_hour.html", task_list=task_list, all_data=projects,wh_data=wh_data, user=current_user)
 
 @views.route('/workhour_update', methods = ['POST'])
@@ -73,6 +79,7 @@ def workhour_update():
         my_data.username = request.form.get('username')
         my_data.jobpart = request.form.get('jobpart')
         my_data.workhour = request.form.get('workhour')
+        my_data.recodingdate = request.form.get('recodingdate')
         db.session.commit()
         flash("Employee Updated Successfully")
         return redirect(url_for('views.work_hour'))
@@ -103,7 +110,9 @@ def project_create():
         db.session.commit()
         msg = "Record successfully added to database"
         flash(msg, category='success')
-    all_data = Project.query.all()
+
+    today = date.today()
+    all_data = db.session.query(Project).filter(Project.enddate > today).all()
     return render_template("projectcreate.html",all_data=all_data, user=current_user)
 
 @views.route('/project_view', methods=['GET'])
@@ -127,8 +136,8 @@ def project_update():
         flash("Project Updated Successfully")
         return redirect(url_for('views.project_view'))
 
-
-    all_data = Project.query.all()
+    today = date.today()
+    all_data = db.session.query(Project).filter(Project.enddate > today).all()
     return render_template("projectview.html",all_data=all_data, user=current_user)
 
 
@@ -191,7 +200,7 @@ def workhour_total():
                 Working_hour.username,
                 Working_hour.jobpart,
                 Working_hour.workhour,
-                func.date(Working_hour.date).label('date')
+                Working_hour.recodingdate
                 ).all()
 
         # all_data = db.session.query(

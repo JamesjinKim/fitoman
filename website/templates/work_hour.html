@@ -36,7 +36,7 @@
         <th></th>
         </tr>
     </thead>
-    {% for row in user.working_hours %}
+    {% for row in wh_data %}
     <tbody>
       <tr>
         <td>{{row.id}}</td>
@@ -45,7 +45,7 @@
         <td>{{row.username}}</td>
         <td>{{row.jobpart}}</td>
         <td class="participation-time">{{row.workhour}}</td>
-        <td>{{row.date.strftime('%Y-%m-%d')}}</td>
+        <td>{{row.recodingdate}}</td>
         <td>
           <a href="/views.workhour_update/{{row.id}}" class="btn btn-warning btn-xs" data-toggle="modal" data-target="#modaledit{{row.id}}">Edit</a>
           <a href="/workhour_delete/{{row.id}}" class="btn btn-danger btn-xs" onclick="return confirm('이 데이터를 삭제하시겠습니까?')">Delete</a>
@@ -92,6 +92,11 @@
                         <div class="form-group">
                             <label>근무시간</label>
                             <input type="number" class="workhour" name="workhour" value="{{row.workhour}}" required="1" min="0" max="12">
+                        </div>
+
+                        <div class="child1">
+                            <label for="recodingdate">근무일&nbsp;&nbsp;</label>        
+                            <input type="date" id="recodingdate" name="recodingdate" data-date-format="yymmdd">
                         </div>
 
                         <div class="modal-footer">
