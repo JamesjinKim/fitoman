@@ -18,7 +18,7 @@
         <th>성명</th>
         <th>작업분야</th>
         <th>작업시간</th>
-        <th>날짜</th>
+        <th>기록날짜</th>
         <th></th>
         </tr>
     </thead>
@@ -31,7 +31,7 @@
         <td>{{row.username}}</td>
         <td>{{row.jobpart}}</td>
         <td class="participation-time">{{row.workhour}}</td>
-        <td>{{row.date}}</td>
+        <td>{{row.recodingdate}}</td>
         <td></td>
       </tr>
     </tbody>      
@@ -74,7 +74,7 @@
   const totalTimeElement = document.getElementById('total-time');
   totalTimeElement.textContent = totalTime + " 시간";
 
-
+ //엑셀로 저장 함수
   function exportTableToExcel(tableID, filename = ''){
       // Select the table element
       var table = document.getElementById(tableID);
