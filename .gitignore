@@ -1,0 +1,40 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# 환경 설정 파일
+.env
+*.env
+
+# 가상환경 폴더
+.venv/
+ENV/
+env/
+
+# 설치된 라이브러리
+*.egg
+*.egg-info/
+dist/
+build/
+
+# IDE 관련 설정 파일 (PyCharm, VSCode 등)
+.idea/
+.vscode/
+
+# Flask 관련 파일
+instance/
+*.sqlite3
+*.log
+
+# MacOS 임시 파일
+.DS_Store
+
+# Windows 임시 파일
+Thumbs.db
+
+# Log 파일
+*.log
+
+# pyenv 관련 파일
+.python-version
