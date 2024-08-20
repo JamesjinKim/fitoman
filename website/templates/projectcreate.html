@@ -64,16 +64,81 @@
       <button type="submit" class="btn btn-primary">프로젝트 등록</button>
     </form>
     <br><hr>
-    <ul class="list-group list-group-flush" id="projects">
-      {% for data in all_data %}
-      <li class="list-group-item">
-        {{ data.pcode }}&nbsp;&nbsp;{{ data.pname}}&nbsp;&nbsp;{{ data.startdate}}&nbsp;&nbsp;{{ data.enddate }}&nbsp;&nbsp;{{data.user_id}}&nbsp;&nbsp;
-        <button type="button" class="btn btn-outline-dark" onClick="project_edit({{ data.pid }})">Edit</button>
-        <button type="button" class="close" onClick="project_delete({{ data.pid }})">  
-        <span aria-hidden="false">&times;</span>
-        </button>
-      </li>
+    <table class="table table-hover table-striped" id="table1">
+      <thead>
+          <tr>
+          <th>ID</th>
+          <th>프로젝트 No</th>
+          <th>프로젝트 명</th>
+          <th>프로젝트 설명</th>
+          <th>시작일</th>
+          <th>종료일</th>
+          <th></th>
+          </tr>
+      </thead>
+      {% for row in all_data %}
+      <tbody>
+        <tr>
+          <td>{{row.pid}}</td>
+          <td>{{row.pcode}}</td>
+          <td>{{row.pname}}</td>
+          <td>{{row.pdesc}}</td>
+          <td>{{row.startdate}}</td>
+          <td>{{row.enddate}}</td>
+          <td>
+            <a href="/views.project_update/{{row.pid}}" class="btn btn-warning btn-xs" data-toggle="modal" data-target="#modaledit{{row.pid}}">Edit</a>
+            <a href="/project_delete/{{row.pid}}" class="btn btn-danger btn-xs" onclick="return confirm('이 데이터를 삭제하시겠습니까?')">Delete</a>
+          </td>
+        </tr>
+      </tbody>
+        <!-- Model for updating working_hours data -->
+        <div id="modaledit{{row.pid}}" class="modal fade" role="dialog">
+          <div class="modal-dialog">
+              <div class="modal-content">
+                  <div class="modal-header">
+                      <h4 class="modal-title"> Update working_hours Data </h4>
+                  </div>
+                  <div class="modal-body">
+                      <form action="{{url_for('views.project_update')}}" method="POST">
+  
+                          <div class="form-group">
+                              <label>프로젝트 코드</label>
+                              <input type="hidden" name="pid" value="{{row.pid}}">
+                              <input type="text" class="form-control" name="pcode" value="{{row.pcode}}" required="1">
+                          </div>
+  
+                          <div class="form-group">
+                              <label>프로젝트 명</label>
+                              <input type="text" class="form-control" name="pname" value="{{row.pname}}" required="1">
+                          </div>
+  
+                          <div class="form-group">
+                              <label>프로젝트 설명</label>
+                              <input type="text" class="form-control" name="pdesc" value="{{row.pdesc}}" required="1">
+                          </div>
+  
+                          <div class="parent">
+                            <div class="child1">
+                            <label for="startDate">시작일&nbsp;&nbsp;</label>        
+                            <input type="date" id="startDate" name="startDate" data-date-format="yymmdd">
+                            </div>
+                            <div class="child1">
+                            <label for="endDate">종료일&nbsp;&nbsp;</label>        
+                            <input type="date" id="endDate" name="endDate" data-date-format="yymmdd">
+                            </div>
+                          </div>
+  
+                          <div class="modal-footer">
+                              <button class="btn btn-info" type="submit"> Update</button>
+                              <button class="btn btn-secondary" data-dismiss="modal">Close</button>
+                          </div>
+  
+                      </form>
+                  </div>
+              </div>
+          </div>
+        </div>
       {% endfor %}
-    </ul>
-    <br><br><hr><hr>
+    
   {% endblock %}
+  

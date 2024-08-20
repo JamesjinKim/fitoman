@@ -2,7 +2,7 @@ from flask import Blueprint, render_template, request, flash, jsonify, redirect,
 from flask_login import login_required, current_user
 from .models import Note, Project, Cocompany,Working_hour
 from . import db
-from sqlalchemy import func
+from sqlalchemy import func, desc
 import json
 from datetime import date, timedelta
 
@@ -23,7 +23,7 @@ def home():
             db.session.commit()
             flash('Note added!', category='success')
         
-    all_data = Note.query.all()
+    all_data = Note.query.order_by(desc(Note.date)).all()
 
     return render_template("home.html", all_data=all_data, user=current_user)
 
@@ -111,47 +111,50 @@ def project_create():
         msg = "Record successfully added to database"
         flash(msg, category='success')
 
+    #종료일이 오늘 이후 것 가져옴
     today = date.today()
-    all_data = db.session.query(Project).filter(Project.enddate > today).all()
+    all_data = db.session.query(
+        Project.pid,
+        Project.pcode,
+        Project.pname,
+        Project.startdate,
+        Project.enddate,
+        Project.pdesc,
+    func.strftime('%y-%m-%d', Project.date).label('date')).filter(Project.enddate > today).all()
     return render_template("projectcreate.html",all_data=all_data, user=current_user)
 
-@views.route('/project_view', methods=['GET'])
-@login_required
-def project_view():
-
-    all_data = Project.query.all()
-    return render_template("projectview.html",all_data=all_data, user=current_user)
-
-@views.route('/project_update', methods=['GET'])
+@views.route('/project_update', methods=['GET','POST'])
 @login_required
 def project_update():
-
     if request.method == "POST":
-        my_data = Working_hour.query.get(request.form.get('id'))
+        my_data = Project.query.get(request.form.get('pid'))
         my_data.pcode = request.form.get('pcode')
-        my_data.username = request.form.get('username')
-        my_data.part = request.form.get('part')
-        my_data.workhour = request.form.get('workhour')
+        my_data.pname = request.form.get('pname')
+        my_data.pdesc = request.form.get('pdesc')
+        startdate = request.form.get('startDate')
+        enddate = request.form.get('endDate')
+        if startdate != '' and enddate != '':
+            my_data.startdate = request.form.get('startDate')
+            my_data.enddate = request.form.get('endDate')
+        
+        print(my_data)
         db.session.commit()
         flash("Project Updated Successfully")
-        return redirect(url_for('views.project_view'))
+        return redirect(url_for('views.project_create'))
 
-    today = date.today()
-    all_data = db.session.query(Project).filter(Project.enddate > today).all()
-    return render_template("projectview.html",all_data=all_data, user=current_user)
-
-
-@views.route('/project_delete', methods=['POST'])
+@views.route('/project_delete/<pid>/', methods=['GET', 'POST'])
 @login_required
-def project_delete():  
-    proj = json.loads(request.data) # this function expects a JSON from the INDEX.js file 
-    pid = proj['pid']
-    data = Project.query.get(pid)
-    if data:
-        if data.user_id == current_user.id:
-            db.session.delete(data)
+def project_delete(pid):  
+    my_data = Project.query.get(pid)    
+    if my_data:
+        if my_data.user_id == current_user.id:
+            db.session.delete(my_data)
             db.session.commit()
-    return jsonify({})
+            flash("Project 삭제가 완료되었습니다.")
+        else:
+            flash("Project를 생성한 사람만 삭제 가능합니다.")
+
+    return redirect(url_for('views.project_create'))
 
 #Co Company Create
 @views.route('/cocompany_create', methods=['GET', 'POST'])
@@ -164,9 +167,8 @@ def cocompany_create():
         saaddr = request.form.get('saaddr')
         sacontact = request.form.get('sacontact')
         today = date.today()
-        sadate = today
         cocomp = Cocompany(saname=saname,sourcingjob=sourcingjob,
-                       saboss=saboss,saaddr=saaddr,sacontact=sacontact,sadate=sadate)
+                       saboss=saboss,saaddr=saaddr,sacontact=sacontact,sadate=today)
         db.session.add(cocomp)
         db.session.commit()
         msg = "Record successfully added to database"
@@ -191,17 +193,14 @@ def cocompany_delete():
 @views.route('/workhour_total', methods=['GET', 'POST'])
 @login_required
 def workhour_total():
-        # 시작 날짜와 종료 날짜 설정
-        # from_day = '24-08-01'
-        # to_day = '24-09-04'
-        all_data = db.session.query(
-                Working_hour.pcode,
-                Working_hour.pname,
-                Working_hour.username,
-                Working_hour.jobpart,
-                Working_hour.workhour,
-                Working_hour.recodingdate
-                ).all()
+    all_data = db.session.query(
+            Working_hour.pcode,
+            Working_hour.pname,
+            Working_hour.username,
+            Working_hour.jobpart,
+            Working_hour.workhour,
+            Working_hour.recodingdate
+            ).all()
 
         # all_data = db.session.query(
         #         Working_hour.pcode,
@@ -212,7 +211,7 @@ def workhour_total():
         #         func.date(Working_hour.date).label('date')
         #    ).group_by(Working_hour.pcode,func.date(Working_hour.date).label('date')).all()
         #all_data = Working_hour.query.all()
-        return render_template("workhourtotal.html",all_data=all_data,user=current_user)
+    return render_template("workhourtotal.html",all_data=all_data,user=current_user)
 
 # 날짜 범위를 생성하는 함수
 # def generate_date_range(start_date, end_date):

@@ -26,6 +26,7 @@ build/
 instance/
 *.sqlite3
 *.log
+*.db
 
 # MacOS 임시 파일
 .DS_Store

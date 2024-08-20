@@ -36,7 +36,7 @@
         <th></th>
         </tr>
     </thead>
-    {% for row in wh_data %}
+    {% for row in user.working_hours %}
     <tbody>
       <tr>
         <td>{{row.id}}</td>
@@ -108,7 +108,7 @@
                 </div>
             </div>
         </div>
-    </div>
+      </div>
     {% endfor %}
     <tfoot>
         <tr>
