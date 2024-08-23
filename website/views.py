@@ -66,7 +66,7 @@ def work_hour():
     today = date.today()
     yesterday = today - timedelta(days=6)
     projects = Project.query.with_entities(Project.pcode,Project.pname).filter(Project.enddate > today).all()
-    wh_data=Working_hour.query.filter(Working_hour.recodingdate >= yesterday).all()
+    wh_data=Working_hour.query.filter(Working_hour.recodingdate >= yesterday).where(Working_hour.user_id == current_user.id).order_by(Working_hour.recodingdate.desc())
     #wh_data=Working_hour.query.all()
     return render_template("work_hour.html", task_list=task_list, all_data=projects,wh_data=wh_data, user=current_user)
 
@@ -79,20 +79,35 @@ def workhour_update():
         my_data.username = request.form.get('username')
         my_data.jobpart = request.form.get('jobpart')
         my_data.workhour = request.form.get('workhour')
-        my_data.recodingdate = request.form.get('recodingdate')
+        recodedate = request.form.get('recodingdate')
+        if recodedate != "":
+            my_data.recodingdate = recodedate
+        
         db.session.commit()
         flash("Employee Updated Successfully")
         return redirect(url_for('views.work_hour'))
 
-@views.route('/workhour_delete/<id>/')
+@views.route('/workhour_delete', methods=['POST'])
 @login_required
-def workhour_delete(id): 
-    my_data = Working_hour.query.get(id)
-    db.session.delete(my_data)
-    db.session.commit()
+def workhour_delete():  
+    data = json.loads(request.data) # this function expects a JSON from the INDEX.js file 
+    dataId = data['id']
+    res = Working_hour.query.get(dataId)
+    if res:
+        if res.user_id == current_user.id:
+            db.session.delete(res)
+            db.session.commit()
 
-    flash("Data Deleted Successfully")
-    return redirect(url_for('views.work_hour'))
+    return jsonify({})
+# @views.route('/workhour_delete/<id>/')
+# @login_required
+# def workhour_delete(id): 
+#     my_data = Working_hour.query.get(id)
+#     db.session.delete(my_data)
+#     db.session.commit()
+
+#     flash("Data Deleted Successfully")
+#     return redirect(url_for('views.work_hour'))
     
 @views.route('/project_create', methods=['GET', 'POST'])
 @login_required
@@ -120,7 +135,7 @@ def project_create():
         Project.startdate,
         Project.enddate,
         Project.pdesc,
-    func.strftime('%y-%m-%d', Project.date).label('date')).filter(Project.enddate > today).all()
+    func.strftime('%y-%m-%d', Project.date).label('date')).filter(Project.enddate >= today).all()
     return render_template("projectcreate.html",all_data=all_data, user=current_user)
 
 @views.route('/project_update', methods=['GET','POST'])
@@ -236,6 +251,25 @@ def workhour_total():
 @views.route('/test', methods=['GET', 'POST'])
 @login_required
 def test():
-    
-    return render_template('test.html', user=current_user)
+    if request.method == 'POST': 
+        pcode = request.form.get('pcode')
+        pname = request.form.get('pname')
+        startDate = request.form.get('startDate').replace('-', ', ')
+        endDate = request.form.get('endDate').replace('-', ', ')
+        print(pcode)
+        print(pname)
+        print(len(startDate)) #if len(startDate) > 1:
+        print(endDate)
+       
+    #종료일이 오늘 이후 것 가져옴
+    today = date.today()
+    all_data = db.session.query(
+        Project.pid,
+        Project.pcode,
+        Project.pname,
+        Project.startdate,
+        Project.enddate,
+        Project.pdesc,
+    func.strftime('%y-%m-%d', Project.date).label('date')).filter(Project.enddate >= today).all()
+    return render_template('test.html',all_data=all_data, user=current_user)
 

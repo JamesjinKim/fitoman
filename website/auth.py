@@ -74,19 +74,14 @@ def sign_up():
 @auth.route('/userinfo_update', methods=['GET', 'POST'])
 def userinfo_update():
     if request.method == 'POST':
-        # password = request.form.get('password')
-        # newpassword = request.form.get('newpassword')
-        # if password != newpassword:
-        #     flash('Passwords don\'t match.', category='error')
-        # else:
-            my_data = User.query.get(request.form.get('id'))
-            my_data.email = request.form.get('email')
-            my_data.uname = request.form.get('uname')
-            my_data.udepartment = request.form.get('udepartment')
-            my_data.uposition = request.form.get('uposition')
-            my_data.authority = request.form.get('authority')
-            db.session.commit()
-            flash("UserInfo Updated Successfully")
+        my_data = User.query.get(request.form.get('id'))
+        my_data.email = request.form.get('email')
+        my_data.uname = request.form.get('uname')
+        my_data.udepartment = request.form.get('udepartment')
+        my_data.uposition = request.form.get('uposition')
+        my_data.authority = request.form.get('authority')
+        db.session.commit()
+        flash("UserInfo Updated Successfully")
     all_data = User.query.all()
     return render_template("user_info.html", all_data=all_data, user=current_user)
 

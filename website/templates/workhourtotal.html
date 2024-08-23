@@ -4,12 +4,13 @@
 
 {% block content %}
 <div class="container">
+<div class="table-wrapper">
 <div class="row">
 <div class="col-md-12">
 <div class="bg-light p-3">
     <h5>Manage Working Hours </h5>
 
-  <table class="table table-hover table-striped" id="table1">
+  <table class="table table-hover table-striped table-responsive-sm" id="table1">
     <thead>
         <tr>
         <th>Index</th>
@@ -50,6 +51,7 @@
     </tfoot>
     </table>
     <button class="btn btn-success float-end" onclick="exportTableToExcel('table1', 'working_hours')">Excel로 저장</button>
+</div>
 </div>
 </div>
 </div>

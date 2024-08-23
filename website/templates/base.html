@@ -9,6 +9,7 @@
       integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh"
       crossorigin="anonymous"
     />
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <link
       rel="stylesheet"
       href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css"
@@ -33,6 +34,24 @@
         display: inline-block;
         width: 280px;
         height: 100px;
+      }
+
+      /* 추가적인 커스터마이징을 위한 CSS */
+      .table-wrapper {
+        overflow-x: auto; /* 가로 스크롤 가능하게 설정 */
+      }
+
+      /* 작은 화면에서 테이블 셀의 텍스트를 작게 */
+      @media (max-width: 768px) {
+        .table td, .table th {
+          font-size: 12px;
+          white-space: nowrap; /* 텍스트 줄바꿈 방지 */
+      }
+
+        .btn-xs {
+          font-size: 10px;
+          padding: 2px 5px;
+      }
       }
 
     </style>

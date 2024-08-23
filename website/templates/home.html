@@ -6,7 +6,7 @@
 <ul class="list-group list-group-flush" id="notes">
   {% for note in all_data %}  <!--개인별 공지 user.notes-->
   <li class="list-group-item">
-    {{ note.data }}/{{note.date}}//{{note.noteuname}}
+    {{ note.data }}&nbsp;&nbsp;{{note.date}}&nbsp;&nbsp;{{note.noteuname}}
     {% if current_user.authority == '1' %}
     <button type="button" class="close" onClick="delete_note({{ note.id }})">
       <span aria-hidden="true">&times;</span>

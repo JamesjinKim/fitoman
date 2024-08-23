@@ -1,0 +1,230 @@
+
+{% extends 'base.html' %}
+{% block title %} 업무시간기록 Home {% endblock %}
+
+{% block content %}
+<div class="container">
+<div class="row">
+    <div class="col-md-12">
+    <div class="bg-light p-3">
+        <h3>Manage Working Hours 
+        <button type="button" class="btn btn-success float-end" 
+            data-toggle="modal" data-target="#mymodal">업무시간기록</button> </h3>
+            <form>
+                <div class="row">
+                  <div class="col">
+                    <label for="userDepartmet">소속: {{user.udepartment}}</label>
+                  </div>
+                  <div class="col">
+                    <label for="userPosition">직책: {{user.uposition}}</label>
+                  </div>
+                  <div class="col">
+                    <label for="userName">성명: {{user.uname}}</label>
+                  </div>
+                </div>
+            </form>
+  <table class="table table-hover table-striped" id="table1">
+    <thead>
+        <tr>
+        <th>ID</th>
+        <th>프로젝트 No</th>
+        <th>프로젝트 명</th>
+        <th>성명</th>
+        <th>작업분야</th>
+        <th>작업시간(0-12)</th>
+        <th>기록날짜</th>
+        <th></th>
+        </tr>
+    </thead>
+    {% for row in user.working_hours %}
+    <tbody>
+      <tr>
+        <td>{{row.id}}</td>
+        <td>{{row.pcode}}</td>
+        <td>{{row.pname}}</td>
+        <td>{{row.username}}</td>
+        <td>{{row.jobpart}}</td>
+        <td class="participation-time">{{row.workhour}}</td>
+        <td>{{row.recodingdate}}</td>
+        <td>
+          <a href="/views.workhour_update/{{row.id}}" class="btn btn-warning btn-xs" data-toggle="modal" data-target="#modaledit{{row.id}}">Edit</a>
+          <a href="/workhour_delete/{{row.id}}" class="btn btn-danger btn-xs" onclick="return confirm('이 데이터를 삭제하시겠습니까?')">Delete</a>
+        </td>
+      </tr>
+    </tbody>
+      <!-- Model for updating working_hours data -->
+      <div id="modaledit{{row.id}}" class="modal fade" role="dialog">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title"> Update working_hours Data </h4>
+                </div>
+                <div class="modal-body">
+                    <form action="{{url_for('views.workhour_update')}}" method="POST">
+
+                        <div class="form-group">
+                            <label>프로젝트 코드</label>
+                            <input type="hidden" name="id" value="{{row.id}}">
+                            <input type="text" class="form-control" name="pcode" value="{{row.pcode}}" required="1">
+                        </div>
+
+                        <div class="form-group">
+                            <label>프로젝트 명</label>
+                            <input type="hidden" name="id" value="{{row.id}}">
+                            <input type="text" class="form-control" name="pname" value="{{row.pname}}" required="1">
+                        </div>
+
+                        <div class="form-group">
+                            <label>이름</label>
+                            <input type="text" class="form-control" name="username" value="{{row.username}}" required="1">
+                        </div>
+
+                        <div class="form-group">
+                            <label>작업분야</label>
+                            <select id="jobpart" class="form-control" name="jobpart">
+                                <option value="">선택하세요</option>
+                                {% for task in task_list %}
+                                    <option name="jobpart" value="{{ task }}">{{ task }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label>근무시간</label>
+                            <input type="number" class="workhour" name="workhour" value="{{row.workhour}}" required="1" min="0" max="12">
+                        </div>
+
+                        <div class="child1">
+                            <label for="recodingdate">근무일&nbsp;&nbsp;</label>        
+                            <input type="date" id="recodingdate" name="recodingdate" data-date-format="yymmdd">
+                        </div>
+
+                        <div class="modal-footer">
+                            <button class="btn btn-info" type="submit"> Update</button>
+                            <button class="btn btn-secondary" data-dismiss="modal">Close</button>
+                        </div>
+
+                    </form>
+                </div>
+            </div>
+        </div>
+      </div>
+    {% endfor %}
+    <tfoot>
+        <tr>
+          <td>합계</td>
+          <td id="count"></td>
+          <td></td>
+          <td></td>
+          <td></td>
+          <td id="total-time"></td>
+          <td></td>
+          <td></td>
+        </tr>
+    </tfoot>
+    </table>
+
+    <!-- Model for adding workhour -->
+    <div id="mymodal" class="modal fade" role="dialog">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title"> Add workhour </h4>
+                </div>
+                <div class="modal-body">
+                    <form action="{{url_for('views.work_hour')}}" method="POST">
+
+                        <div class="form-group">
+                            <label>프로젝트 코드</label>
+                            <select id="pcode" class="form-control" name="pcode" onchange="updatePname()">
+                                <option value="">선택하세요</option>
+                                {% for project in all_data %}
+                                    <option value="{{ project.pcode }}">{{ project.pcode }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label>프로젝트명</label>
+                            <input type="text" class="form-control" id="pname" name="pname" value="">
+                        </div>
+
+                        <div class="form-group">
+                            <label>이름</label>
+                            <input type="text" class="form-control" name="username" required="1" value="{{ current_user.uname }}">
+                        </div>
+
+                        <div class="form-group">
+                            <label>참여분야</label>
+                            <select id="jobpart" class="form-control" name="jobpart">
+                                <option value="">선택하세요</option>
+                                {% for task in task_list %}
+                                    <option name="jobpart" value="{{ task }}">{{ task }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label>업무시간</label>
+                            <input type="number" class="workhour" name="workhour" required="1" min="0" max="12">
+                        </div>
+
+                        <div class="modal-footer">
+                            <button class="btn btn-success" type="submit"> 업무시간 기록 </button>
+                            <button class="btn btn-secondary" data-dismiss="modal">Close</button>
+                        </div>
+
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    </div>
+    </div>
+</div>
+</div>
+
+<!-- JavaScript 코드 -->
+<script type="text/javascript">
+    // Jinja2에서 전달된 데이터를 JavaScript 객체로 변환
+    var projectData = {
+        {% for project in all_data %}
+            "{{ project.pcode }}": "{{ project.pname }}",
+        {% endfor %}
+    };
+
+    // pcode 선택 시 pname 업데이트
+    function updatePname() {
+        var selectedPcode = document.getElementById("pcode").value;
+        var pnameInput = document.getElementById("pname");
+
+        if (selectedPcode in projectData) {
+            pnameInput.value = projectData[selectedPcode];
+        } else {
+            pnameInput.value = "";  // 선택이 없는 경우
+        }
+    }
+
+
+    // 참여시간을 가진 모든 td 태그 선택
+    const participationTimes = document.querySelectorAll('.participation-time');
+
+    // 참여시간 값들을 모두 더함
+    let totalTime = 0;
+    let count = 0;
+    participationTimes.forEach(time => {
+    totalTime += parseInt(time.textContent);
+    count++;
+    });
+
+    // 합계 결과를 HTML에 표시
+    const totalCount = document.getElementById('count');
+    totalCount.textContent = count + " 건";
+
+    const totalTimeElement = document.getElementById('total-time');
+    totalTimeElement.textContent = totalTime + " 시간";
+
+</script>
+{% endblock %}
+
+
