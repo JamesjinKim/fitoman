@@ -67,7 +67,6 @@ def work_hour():
     yesterday = today - timedelta(days=6)
     projects = Project.query.with_entities(Project.pcode,Project.pname).filter(Project.enddate > today).all()
     wh_data=Working_hour.query.filter(Working_hour.recodingdate >= yesterday).where(Working_hour.user_id == current_user.id).order_by(Working_hour.recodingdate.desc())
-    #wh_data=Working_hour.query.all()
     return render_template("work_hour.html", task_list=task_list, all_data=projects,wh_data=wh_data, user=current_user)
 
 @views.route('/workhour_update', methods = ['POST'])
@@ -97,18 +96,17 @@ def workhour_delete():
         if res.user_id == current_user.id:
             db.session.delete(res)
             db.session.commit()
-
     return jsonify({})
-# @views.route('/workhour_delete/<id>/')
-# @login_required
-# def workhour_delete(id): 
-#     my_data = Working_hour.query.get(id)
-#     db.session.delete(my_data)
-#     db.session.commit()
 
-#     flash("Data Deleted Successfully")
-#     return redirect(url_for('views.work_hour'))
+@views.route('/project_view', methods=['GET', 'POST'])
+@login_required
+def project_view():
+    # 업무 리스트 데이터 생성
+    task_list = ["전장외주","조립외주","제어외주","기타"]
     
+    all_data = all_projects()
+    return render_template("projectview.html",task_list=task_list, all_data=all_data, user=current_user)
+
 @views.route('/project_create', methods=['GET', 'POST'])
 @login_required
 def project_create():
@@ -126,16 +124,7 @@ def project_create():
         msg = "Record successfully added to database"
         flash(msg, category='success')
 
-    #종료일이 오늘 이후 것 가져옴
-    today = date.today()
-    all_data = db.session.query(
-        Project.pid,
-        Project.pcode,
-        Project.pname,
-        Project.startdate,
-        Project.enddate,
-        Project.pdesc,
-    func.strftime('%y-%m-%d', Project.date).label('date')).filter(Project.enddate >= today).all()
+    all_data = all_projects()
     return render_template("projectcreate.html",all_data=all_data, user=current_user)
 
 @views.route('/project_update', methods=['GET','POST'])
@@ -188,9 +177,10 @@ def cocompany_create():
         db.session.commit()
         msg = "Record successfully added to database"
         flash(msg, category='success')
-    else:
-        all_data = Cocompany.query.all()
-    return render_template("cocompanycreate.html", all_data=all_data, user=current_user)
+        
+    task_list = ["전장외주","조립외주","제어외주","기타"]    
+    all_data = Cocompany.query.all()
+    return render_template("cocompanycreate.html", task_list=task_list, all_data=all_data, user=current_user)
 
 @views.route('/cocompany_delete', methods=['POST'])
 @login_required
@@ -228,26 +218,6 @@ def workhour_total():
         #all_data = Working_hour.query.all()
     return render_template("workhourtotal.html",all_data=all_data,user=current_user)
 
-# 날짜 범위를 생성하는 함수
-# def generate_date_range(start_date, end_date):
-#     start = datetime.strptime(start_date, "%y-%m-%d")
-#     end = datetime.strptime(end_date, "%y-%m-%d")
-#     delta = timedelta(days=1)
-
-#     date_list = []
-#     current_date = start
-#     while current_date <= end:
-#         date_list.append(format_date(current_date))
-#         current_date += delta
-
-#     return date_list
-
-# # 날짜 형식을 변환하는 함수
-# def format_date(date):
-#     weekdays = ["월", "화", "수", "목", "금", "토", "일"]
-#     return date.strftime("%m월 %d일"({weekdays[date.weekday()]}))
-
-
 @views.route('/test', methods=['GET', 'POST'])
 @login_required
 def test():
@@ -261,9 +231,14 @@ def test():
         print(len(startDate)) #if len(startDate) > 1:
         print(endDate)
        
-    #종료일이 오늘 이후 것 가져옴
+        all_data = all_projects()
+    return render_template('test1.html', user=current_user)
+
+
+def all_projects():
+     #종료일이 오늘 이후 것 가져옴
     today = date.today()
-    all_data = db.session.query(
+    all_projects = db.session.query(
         Project.pid,
         Project.pcode,
         Project.pname,
@@ -271,5 +246,4 @@ def test():
         Project.enddate,
         Project.pdesc,
     func.strftime('%y-%m-%d', Project.date).label('date')).filter(Project.enddate >= today).all()
-    return render_template('test.html',all_data=all_data, user=current_user)
-
+    return all_projects

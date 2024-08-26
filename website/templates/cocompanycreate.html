@@ -2,6 +2,9 @@
 {% block title %}업체관리{% endblock %} 
 
 {% block content %}
+<div class="container">
+  <div class="table-wrapper">
+  
     <form method="POST">
       <h3 align="center">업체 등록</h3>
       <div class="form-group">
@@ -15,10 +18,12 @@
         />
       </div>
       <div class="form-group">
-        <label for="sourcingjob">외주업무</label>
-        <select name="sourcingjob" id="sourcingjob">
-          <option value="조립외주">조립외주</option>
-          <option value="전장외주">전장외주</option>
+        <label>참여분야</label>
+        <select id="sourcingjob" class="form-control" name="sourcingjob">
+            <option value="">선택하세요</option>
+            {% for task in task_list %}
+                <option name="sourcingjob" value="{{ task }}">{{ task }}</option>
+            {% endfor %}
         </select>
       </div>
       <div class="form-group">
@@ -69,5 +74,6 @@
       </li>
       {% endfor %}
     </ul>
-    
+</div>
+</div>
 {% endblock %}
