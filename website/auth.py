@@ -45,7 +45,7 @@ def sign_up():
         uPosition = request.form.get('uPosition')
         password1 = request.form.get('password1')
         password2 = request.form.get('password2')
-        authority = '1'  #임시 하드코딩 저장... 1,2,3(1 슈퍼 관리자, 2 관리자, 3 일반 사용자)
+        authority = '3'  #임시 하드코딩 저장... 1,2,3(1 슈퍼 관리자,  3 일반 사용자)
 
         user = User.query.filter_by(email=email).first()
         if user:

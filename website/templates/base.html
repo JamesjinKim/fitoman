@@ -70,7 +70,7 @@
       </button>
       <div class="collapse navbar-collapse" id="navbar">
         <div class="navbar-nav">
-          {% if user.is_authenticated %}
+          {% if user.is_authenticated and user.authority == '1' %}
             <a class="nav-item nav-link" id="home" href="/">Home</a>
             <a class="nav-item nav-link" id="UserInfo" href="/userinfo_update">사용자정보</a>
             <a class="nav-item nav-link" id="logout" href="/logout">Logout</a>
@@ -79,6 +79,10 @@
             <a class="nav-item nav-link" id="project" href="/project_create">프로젝트 등록</a>
             <a class="nav-item nav-link" id="projectview" href="/project_view">프로젝트별 현황</a>
             <a class="nav-item nav-link" id="oscompany" href="/cocompany_create">협력사 등록</a>
+          {% elif user.is_authenticated and user.authority == '3' %}
+            <a class="nav-item nav-link" id="home" href="/">Home</a>
+            <a class="nav-item nav-link" id="logout" href="/logout">Logout</a>
+            <a class="nav-item nav-link" id="work_hour" href="/work_hour">업무시간 기록</a>
           {% else %}
             <a class="nav-item nav-link" id="login" href="/login">Login</a>
             <a class="nav-item nav-link" id="signUp" href="/sign-up">Sign Up</a>
