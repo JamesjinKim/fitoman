@@ -1,10 +1,10 @@
 from flask import Blueprint, render_template, request, flash, jsonify, redirect, url_for
 from flask_login import login_required, current_user
-from .models import Note, Project, Cocompany,Working_hour
+from .models import Note, Project, Cocompany,Working_hour, User
 from . import db
 from sqlalchemy import func, desc
 import json
-from datetime import date, timedelta
+from datetime import date, timedelta ,datetime
 
 views = Blueprint('views', __name__)
 
@@ -176,7 +176,7 @@ def project_delete(pid):
             db.session.commit()
             flash("Project 삭제가 완료되었습니다.")
         else:
-            flash("Project를 생성한 사람만 삭제 가능합니다.")
+            flash("Project를 생성한 사람만 삭제 가능합니다.",category='error')
 
     return redirect(url_for('views.project_create'))
 
@@ -226,17 +226,60 @@ def workhour_total():
             Working_hour.workhour,
             Working_hour.recodingdate
             ).all()
+    # pcode로 그룹핑하여 workhour 합산
+    all_data_by_pcode = db.session.query(
+        Working_hour.pcode,
+        Working_hour.pname,
+        Working_hour.jobpart,
+        func.sum(Working_hour.workhour).label('workhour'),
+        Working_hour.recodingdate
+    ).group_by(
+        Working_hour.pcode,
+        Working_hour.pname,
+        Working_hour.jobpart,
+        Working_hour.recodingdate
+    ).order_by(
+        Working_hour.pcode.asc(),
+        Working_hour.recodingdate.asc()
+    ).all()
+    #username으로 그룹핑하여 workhour 합산
+    all_data_by_username = db.session.query(
+        Working_hour.username,
+        func.sum(Working_hour.workhour).label('workhour')
+    ).group_by(Working_hour.username).all()
+    #recodingdate로 그룹핑하여 workhour 합산
+    all_data_by_recodingdate = db.session.query(
+        Working_hour.recodingdate,
+        func.sum(Working_hour.workhour).label('workhour')
+    ).group_by(Working_hour.recodingdate).all()
+    #recodingdate를 from-to 조건으로 필터링하여 데이터 조회
+    # start_date = datetime.strptime('2024-08-01', '%Y-%m-%d').date()
+    # end_date = datetime.strptime('2024-09-31', '%Y-%m-%d').date()
 
-        # all_data = db.session.query(
-        #         Working_hour.pcode,
-        #         Working_hour.pname,
-        #         Working_hour.username,
-        #         Working_hour.jobpart,
-        #         func.sum(Working_hour.workhour).label('workhour'),
-        #         func.date(Working_hour.date).label('date')
-        #    ).group_by(Working_hour.pcode,func.date(Working_hour.date).label('date')).all()
-        #all_data = Working_hour.query.all()
-    return render_template("workhourtotal.html",all_data=all_data,user=current_user)
+    # all_data_by_date_range = db.session.query(
+    #     Working_hour.pcode,
+    #     Working_hour.pname,
+    #     Working_hour.username,
+    #     Working_hour.jobpart,
+    #     Working_hour.workhour,
+    #     Working_hour.recodingdate
+    # ).filter(
+    #     Working_hour.recodingdate.between(start_date, end_date)
+    # ).all()
+    #pcode와 recodingdate로 동시에 그룹핑하여 workhour 합산
+    all_data_by_pcode_and_date = db.session.query(
+            Working_hour.pcode,
+            Working_hour.recodingdate,
+            func.sum(Working_hour.workhour).label('workhour')
+        ).group_by(
+            Working_hour.pcode,
+            Working_hour.recodingdate
+        ).order_by(
+            Working_hour.pcode.asc(),
+            Working_hour.recodingdate.asc()
+        ).all()
+
+    return render_template("workhourtotal.html",all_data=all_data_by_pcode,user=current_user)
 
 @views.route('/test', methods=['GET', 'POST'])
 @login_required
@@ -246,14 +289,83 @@ def test():
         pname = request.form.get('pname')
         startDate = request.form.get('startDate').replace('-', ', ')
         endDate = request.form.get('endDate').replace('-', ', ')
-        print(pcode)
-        print(pname)
-        print(len(startDate)) #if len(startDate) > 1:
-        print(endDate)
-       
-        all_data = all_projects()
+        #recodingdate를 from-to 조건으로 필터링하여 데이터 조회
+        start_date = datetime.strptime('2024-08-01', '%Y-%m-%d').date()
+        end_date = datetime.strptime('2024-09-31', '%Y-%m-%d').date()
+
+        all_data_by_date_range = db.session.query(
+            Working_hour.pcode,
+            Working_hour.pname,
+            Working_hour.username,
+            Working_hour.jobpart,
+            Working_hour.workhour,
+            Working_hour.recodingdate
+        ).filter(
+            Working_hour.recodingdate.between(start_date, end_date)
+        ).all()
+
+        # User 테이블을 조인하여 pcode와 jobpart별로 그룹핑하고 workhour를 합산
+        all_data_by_pcode_jobpart_department = db.session.query(
+            Working_hour.pcode,
+            User.udepartment,
+            Working_hour.jobpart,
+            func.sum(Working_hour.workhour).label('workhours')
+        ).join(
+            User, Working_hour.user_id == User.id  # User 테이블과 조인
+        ).group_by(
+            Working_hour.pcode,
+            User.udepartment,
+            Working_hour.jobpart
+        ).order_by(
+            Working_hour.pcode.asc(),
+            User.udepartment.asc(),
+            Working_hour.jobpart.asc()
+        ).all()
+        # 조건절을 추가한 Query  .filter()
+        all_data_by_pcode = db.session.query(
+            Working_hour.pcode,
+            Working_hour.pname,
+            Working_hour.jobpart,
+            func.sum(Working_hour.workhour).label('total_workhours'),
+            Working_hour.recodingdate
+        ).filter(
+            Working_hour.pcode == '0777'  # 특정 pcode 조건 추가
+        ).group_by(
+            Working_hour.pcode,
+            Working_hour.pname,
+            Working_hour.jobpart,
+            Working_hour.recodingdate
+        ).order_by(
+            Working_hour.pcode.asc(),
+            Working_hour.recodingdate.asc()
+        ).all()
     return render_template('test1.html', user=current_user)
 
+@views.route('/work_hours_summary', methods=['GET', 'POST'])
+@login_required
+def work_hours_summary():
+    # 데이터베이스에서 쿼리 수행
+    all_data_by_pcode_jobpart_department = db.session.query(
+        Working_hour.pcode,
+        Working_hour.jobpart,
+        User.udepartment,
+        func.sum(Working_hour.workhour).label('total_workhours')
+    ).filter(
+        Working_hour.pcode == '0777'  # 특정 pcode 조건 추가
+    ).join(
+        User, Working_hour.user_id == User.id
+    ).group_by(
+        Working_hour.pcode,
+        Working_hour.jobpart,
+        User.udepartment
+    ).order_by(
+        Working_hour.pcode.asc(),
+        Working_hour.jobpart.asc(),
+        User.udepartment.asc()
+    ).all()
+
+    # HTML 템플릿으로 데이터 전달
+    return render_template('work_hours_summary.html', data=all_data_by_pcode_jobpart_department, user=current_user)
 
 def all_projects():
      #종료일이 오늘 이후 것 가져옴
