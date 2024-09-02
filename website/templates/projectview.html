@@ -29,13 +29,13 @@
         <table class="table table-hover table-striped table-responsive-sm" id="table1">
             <thead>
                 <tr>
-                <th rowspan="2">P_Code</th>
-                <th colspan="3">설계</th>
-                <th colspan="3">전장</th>
-                <th colspan="3">기술</th>
-                <th colspan="3">제어</th>
-                <th rowspan="3">검수</th>
-                <th rowspan="2">M/D계</th>
+                    <th rowspan="2">PCode</th>
+                    <th colspan="3">설계</th>
+                    <th colspan="3">전장</th>
+                    <th colspan="3">기술</th>
+                    <th colspan="3">제어</th>
+                    <th rowspan="3">검수</th>
+                    <th rowspan="2">M/D계</th>
                 </tr>
                 <tr>
                     <th>설계</th>
@@ -56,6 +56,8 @@
                 {% for project in all_data %}
                 <tr>
                     <td>{{ project.pcode }}</td>  <!-- 순번 표시 -->
+                    <td></td>
+                    <td></td>
                     <td></td>
                     <td></td>
                     <td></td>

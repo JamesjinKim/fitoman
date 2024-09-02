@@ -5,8 +5,12 @@ from . import db
 from sqlalchemy import func, desc
 import json
 from datetime import date, timedelta ,datetime
+import holidays
 
 views = Blueprint('views', __name__)
+
+# 대한민국 공휴일 생성
+kr_holidays = holidays.KR()
 
 @views.route('/', methods=['GET', 'POST'])
 @login_required
@@ -48,6 +52,7 @@ def work_hour():
     # 업무 리스트 데이터 생성
     task_list = ["기구설계","현장지원","전장설계","조립",
                  "PC제어","PLC제어", "셋업", "기타"]
+        
     if request.method == 'POST': 
         pcode = request.form.get('pcode')
         pname = request.form.get('pname')
@@ -69,16 +74,19 @@ def work_hour():
     yesterday = today - timedelta(days=1)
     one_month_ago = today - timedelta(days=30)
 
-    # 어제 날짜의 데이터가 있는지 확인
-    yesterday_data = Working_hour.query.filter(
-        Working_hour.recodingdate == yesterday,
-        Working_hour.user_id == current_user.id
-    ).first()
+    # 주말 또는 공휴일 여부 확인
+    if is_weekend_or_holiday(yesterday):
+        flash("어제는 주말 또는 공휴일이므로 근무 시간을 입력하지 않습니다.", category='info')
+        #return redirect(url_for('views.work_hour'))  # 입력을 막고 다른 페이지로 리디렉션
 
-    if not yesterday_data:
-        flash("No Data for yesterday", category='error')
-    else:
-        flash("Data for yesterday exists", category='success')
+    else:  # 주말이 아닌 경우에만 어제 데이터 확인
+        # 어제 날짜의 데이터가 있는지 확인
+        yesterday_data = Working_hour.query.filter(
+            Working_hour.recodingdate == yesterday,
+            Working_hour.user_id == current_user.id
+        ).first()
+        if not yesterday_data:
+            flash("No Data for yesterday", category='error')
 
     # 종료되지 않은 프로젝트 리스트
     projects = Project.query.with_entities(Project.pcode, Project.pname).filter(Project.enddate > today).all()
@@ -219,28 +227,32 @@ def cocompany_delete():
 @login_required
 def workhour_total():
     all_data = db.session.query(
-            Working_hour.pcode,
-            Working_hour.pname,
-            Working_hour.username,
-            Working_hour.jobpart,
-            Working_hour.workhour,
-            Working_hour.recodingdate
-            ).all()
+        Working_hour.pcode,
+        Working_hour.pname,
+        Working_hour.username,
+        Working_hour.jobpart,
+        Working_hour.workhour,
+        Working_hour.recodingdate
+        ).order_by(
+        Working_hour.recodingdate.desc()
+        ).all()
     # pcode로 그룹핑하여 workhour 합산
     all_data_by_pcode = db.session.query(
         Working_hour.pcode,
         Working_hour.pname,
+        Working_hour.username,
         Working_hour.jobpart,
         func.sum(Working_hour.workhour).label('workhour'),
         Working_hour.recodingdate
     ).group_by(
         Working_hour.pcode,
         Working_hour.pname,
+        Working_hour.username,
         Working_hour.jobpart,
         Working_hour.recodingdate
     ).order_by(
         Working_hour.pcode.asc(),
-        Working_hour.recodingdate.asc()
+        Working_hour.recodingdate.asc() #desc()
     ).all()
     #username으로 그룹핑하여 workhour 합산
     all_data_by_username = db.session.query(
@@ -252,20 +264,6 @@ def workhour_total():
         Working_hour.recodingdate,
         func.sum(Working_hour.workhour).label('workhour')
     ).group_by(Working_hour.recodingdate).all()
-    #recodingdate를 from-to 조건으로 필터링하여 데이터 조회
-    # start_date = datetime.strptime('2024-08-01', '%Y-%m-%d').date()
-    # end_date = datetime.strptime('2024-09-31', '%Y-%m-%d').date()
-
-    # all_data_by_date_range = db.session.query(
-    #     Working_hour.pcode,
-    #     Working_hour.pname,
-    #     Working_hour.username,
-    #     Working_hour.jobpart,
-    #     Working_hour.workhour,
-    #     Working_hour.recodingdate
-    # ).filter(
-    #     Working_hour.recodingdate.between(start_date, end_date)
-    # ).all()
     #pcode와 recodingdate로 동시에 그룹핑하여 workhour 합산
     all_data_by_pcode_and_date = db.session.query(
             Working_hour.pcode,
@@ -279,7 +277,7 @@ def workhour_total():
             Working_hour.recodingdate.asc()
         ).all()
 
-    return render_template("workhourtotal.html",all_data=all_data_by_pcode,user=current_user)
+    return render_template("workhourtotal.html",all_data=all_data,user=current_user)
 
 @views.route('/test', methods=['GET', 'POST'])
 @login_required
@@ -321,6 +319,7 @@ def test():
             User.udepartment.asc(),
             Working_hour.jobpart.asc()
         ).all()
+        
         # 조건절을 추가한 Query  .filter()
         all_data_by_pcode = db.session.query(
             Working_hour.pcode,
@@ -379,3 +378,12 @@ def all_projects():
         Project.pdesc,
     func.strftime('%y-%m-%d', Project.date).label('date')).filter(Project.enddate >= today).all()
     return all_projects
+
+def is_weekend_or_holiday(check_date):
+    # 주말인지 확인 (토요일: 5, 일요일: 6)
+    if check_date.weekday() in [5, 6]:
+        return True
+    # 공휴일인지 확인
+    if check_date in kr_holidays:
+        return True
+    return False
