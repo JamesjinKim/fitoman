@@ -46,7 +46,7 @@
           placeholder="Enter addr"
         />
       </div>
-    
+
       <div class="form-group">
         <label for="sacontact">연락처</label>
         <input
@@ -57,23 +57,66 @@
         placeholder="Enter contact"
         />
       </div>
+
+      <div class="form-group">
+        <label for="saemail">이메일</label>
+        <input
+        type="text"
+        class="form-control"
+        id="saemail"
+        name="saemail"
+        placeholder="Enter Email"
+        />
+      </div>
       
       <br>
       <button type="submit" class="btn btn-primary">업체등록</button>
     </form>
     <br><hr>
-    <h3 align="center">협력사 목록</h3>
-    <ul class="list-group list-group-flush" id="cocompany">
-      {% for data in all_data %}
-      <li class="list-group-item">
-        {{ data.saname }}/{{ data.sourcingjob}}/{{ data.saboss }}/{{ data.saaddr }}/{{ data.sacontact }}
-        <button type="button" class="btn btn-outline-dark" onClick="cocompany_edit({{ data.id }})">Edit</button>
-        <button type="button" class="close" onClick="cocompany_delete({{ data.id }})">  
-        <span aria-hidden="false">&times;</span>
-        </button>
-      </li>
-      {% endfor %}
-    </ul>
+
+    <h3>협력사 정보</h3>
+    <form>
+        <div class="row">
+            <div class="col">
+            <label for="userDepartmet">소속: {{user.udepartment}}</label>
+            </div>
+            <div class="col">
+            <label for="userPosition">직책: {{user.uposition}}</label>
+            </div>
+            <div class="col">
+            <label for="userName">성명: {{user.uname}}</label>
+            </div>
+        </div>
+    </form>
+        <table class="table table-hover table-responsive-sm" id="table1">
+            <thead>
+                <tr>
+                    <th>회사명</th>
+                    <th>외주분야</th>
+                    <th>대표자</th>
+                    <th>주소</th>
+                    <th>연락처</th>
+                    <th>이메일</th>
+                    <th></th>
+                </tr>
+            </thead>
+            {% for data in all_data %}
+                <tbody>
+                    <tr>
+                        <td>{{ data.saname }}</td>
+                        <td>{{ data.sourcingjob}}</td>
+                        <td>{{ data.saboss }}</td>
+                        <td>{{ data.saaddr }}</td>
+                        <td>{{ data.sacontact }}</td>
+                        <td>{{ data.saemail}}</td>
+                        <td><button type="button" class="close" onClick="cocompany_delete({{ data.id }})">
+                          <span aria-hidden="true">&times;</span>
+                        </button></td>
+                    </tr>
+                </tbody>
+              {% endfor %}
+        </table>
+
 </div>
 </div>
 {% endblock %}

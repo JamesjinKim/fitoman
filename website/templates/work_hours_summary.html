@@ -45,6 +45,13 @@
         {% endfor %}
     </tbody>
 </table>
-
+<script>
+    //<form> 입력값 유지하기
+        function handleSubmit(event) {
+            event.preventDefault(); // 폼 제출을 막음
+            //alert("폼이 제출되었지만 페이지는 새로고침되지 않았습니다.");
+        }
+  
+</script>
 </body>
 </html>

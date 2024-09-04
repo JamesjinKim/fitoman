@@ -78,9 +78,10 @@
             <a class="nav-item nav-link" id="home" href="/">Home</a>
             <a class="nav-item nav-link" id="UserInfo" href="/userinfo_update">사용자정보</a>
             <a class="nav-item nav-link" id="logout" href="/logout">Logout</a>
-            <a class="nav-item nav-link" id="work_hour_view" href="/workhour_total">Total조회</a>
+            <a class="nav-item nav-link" id="workhour_total" href="/workhour_total">Total조회</a>
+            <a class="nav-item nav-link" id="get_user_summary" href="/get_user_summary">개인별 조회</a>
             <a class="nav-item nav-link" id="work_hour" href="/work_hour">업무시간 기록</a>
-            <a class="nav-item nav-link" id="project" href="/project_create">프로젝트 등록</a>
+            <a class="nav-item nav-link" id="project_create" href="/project_create">프로젝트 등록</a>
             <a class="nav-item nav-link" id="projectview" href="/project_view">프로젝트별 현황</a>
             <a class="nav-item nav-link" id="oscompany" href="/cocompany_create">협력사 등록</a>
           {% elif user.is_authenticated and user.authority == '3' %}
