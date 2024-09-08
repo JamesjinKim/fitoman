@@ -59,8 +59,12 @@
                                 <label>참여분야</label>
                                 <select id="jobpart" class="form-control" name="jobpart">
                                     <option value="">선택하세요</option>
-                                    {% for task in task_list %}
-                                        <option name="jobpart" value="{{ task }}">{{ task }}</option>
+                                    {% for department, jobs in data.items() %}
+                                        {% if user.udepartment == department %}
+                                        {% for job in jobs %}
+                                            <option value="{{ job }}">{{ job }}</option>
+                                        {% endfor %}
+                                        {% endif %}
                                     {% endfor %}
                                 </select>
                             </div>
@@ -88,7 +92,7 @@
         </div>
 
 
-        <table class="table table-hover table-striped table-responsive-sm" id="table1">
+        <table class="table table-hover table-responsive-sm" id="table1">
             <thead>
                 <tr>
                 <th>No</th>

@@ -2,10 +2,11 @@ from flask import Blueprint, render_template, request, flash, jsonify, redirect,
 from flask_login import login_required, current_user
 from .models import Note, Project, Cocompany,Working_hour, User
 from . import db
-from sqlalchemy import func, desc
+from sqlalchemy import func, desc,  cast, Integer
 import json
 from datetime import date, timedelta ,datetime
 import holidays
+import pandas as pd
 
 views = Blueprint('views', __name__)
 
@@ -50,8 +51,12 @@ def delete_note():
 @login_required
 def work_hour():  
     # 업무 리스트 데이터 생성
-    task_list = ["기구설계","현장지원","전장설계","조립",
-                 "PC제어","PLC제어", "셋업", "기타"]
+    task_list = {
+        "설계": ["설계", "현장지원", "SETUP"],
+        "전장": ["전장설계", "전장조립", "SETUP"],
+        "제어": ["PC제어", "PLC제어", "SETUP"],
+        "기술": ["조립", "현장관리", "SETUP"]
+        }
         
     if request.method == 'POST': 
         pcode = request.form.get('pcode')
@@ -97,7 +102,7 @@ def work_hour():
         Working_hour.user_id == current_user.id
     ).order_by(Working_hour.recodingdate.desc()).all()
 
-    return render_template("work_hour.html", task_list=task_list, all_data=projects, wh_data=wh_data, user=current_user)
+    return render_template("work_hour.html", data=task_list, all_data=projects, wh_data=wh_data, user=current_user)
 
 @views.route('/workhour_update', methods = ['POST'])
 def workhour_update():
@@ -279,14 +284,32 @@ def workhour_total():
 
     return render_template("workhourtotal.html",all_data=all_data,user=current_user)
 
-@views.route('/test', methods=['GET', 'POST'])
+#일일현황 - 날짜별 부서별 jobpart별 업무시간
+@views.route('/getdata_bydate', methods=['GET', 'POST'])
 @login_required
-def test():
-    if request.method == 'GET': 
+def getdata_bydate():
+    #프로젝트 목록 가져와 선택옵션으로 주기
+    all_project = all_projects()
+    if request.method == 'POST': 
+        pcode = request.form.get('pcode',default="all")
+        print(pcode)
         # 함수 호출 및 사용
-        all_data = get_data_by_date_department_jobpart()
+        results = get_data_by_date_department_jobpart(pcode)
+        print(results)
 
-    return render_template('test.html',data=all_data,user=current_user)
+        # Step 1: SQLAlchemy 쿼리 결과를 DataFrame으로 변환
+        df = pd.DataFrame(results, columns=['department', 'jobpart', 'recodingdate', 'total_hours'])
+
+        # Step 2: 날짜별 데이터를 groupby()로 그룹화
+        grouped_df = df.groupby(['recodingdate', 'department', 'jobpart']).sum().reset_index()
+
+        # Step 3: grouped_df를 딕셔너리로 변환하여 Jinja2 템플릿에 전달
+        table_data = grouped_df.to_dict(orient='records')
+    else:
+        
+        return render_template('data_by.html',all_project=all_project,user=current_user)
+    # Step 4: 데이터를 HTML 템플릿으로 전달
+    return render_template('data_by.html',all_project=all_project,data=table_data, user=current_user)
 
 @views.route('/work_hours_summary', methods=['GET', 'POST'])
 @login_required
@@ -374,25 +397,30 @@ def is_weekend_or_holiday(check_date):
         return True
     return False
 
-def get_data_by_date_department_jobpart():
+def get_data_by_date_department_jobpart(pcode):
     try:
-        data_by_date_department_jobpart = db.session.query(
-            User.udepartment,                          
-            Working_hour.jobpart,                      
-            func.sum(Working_hour.workhour).label('total_workhours'),
-            Working_hour.recodingdate                 
-        ).join(
-            User, Working_hour.user_id == User.id
-        ).group_by(
-            User.udepartment,                          
-            Working_hour.jobpart,                       
-            Working_hour.recodingdate                 
-        ).order_by(
-            User.udepartment.asc(),                    
-            Working_hour.jobpart.asc(),                 
-            Working_hour.recodingdate.asc()           
-        ).all()
-
+        if pcode == "all":
+            data_by_date_department_jobpart = db.session.query(
+                User.udepartment, 
+                Working_hour.jobpart,
+                Working_hour.recodingdate,
+                cast(func.sum(Working_hour.workhour), Integer).label('total_hours')
+                ).join(Working_hour, User.id == Working_hour.user_id
+                ).group_by(User.udepartment, Working_hour.jobpart, Working_hour.recodingdate
+                ).order_by(db.func.row_number().over(partition_by=User.udepartment, order_by=Working_hour.recodingdate.desc())
+                ).all()
+            
+                   #.order_by(Working_hour.recodingdate.desc()).all()
+        else :
+            data_by_date_department_jobpart = db.session.query(
+                User.udepartment, 
+                Working_hour.jobpart,
+                Working_hour.recodingdate,
+                cast(func.sum(Working_hour.workhour), Integer).label('total_hours')
+                ).join(Working_hour, User.id == Working_hour.user_id  # Project 테이블과 JOIN
+                ).filter(Working_hour.pcode == pcode  # pcode 조건 추가
+                ).group_by(User.udepartment, Working_hour.jobpart, Working_hour.recodingdate
+                ).order_by(Working_hour.recodingdate.desc()).all()
         if not data_by_date_department_jobpart:
             print("No data found")
         

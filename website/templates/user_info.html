@@ -4,10 +4,8 @@
 {% block content%}
 
 <div class="container">
-<div class="row">
-<div class="col-md-12">
-<div class="bg-light p-3">
-    <h3>사용자 정보 관리</h3>
+<div class="table-wrapper">
+    <h3 align="center">사용자 정보 관리</h3>
     <form>
         <div class="row">
             <div class="col">
@@ -21,7 +19,7 @@
             </div>
         </div>
     </form>
-        <table class="table table-hover table-striped" id="table1">
+        <table class="table table-hover table-responsive-sm" id="table1">
             <thead>
                 <tr>
                     <th>ID</th>
@@ -97,8 +95,6 @@
             {% endfor %}
                 
         </table>
-</div>
-</div>
 </div>
 </div>
 
