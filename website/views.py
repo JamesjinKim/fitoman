@@ -311,32 +311,6 @@ def getdata_bydate():
     # Step 4: 데이터를 HTML 템플릿으로 전달
     return render_template('data_by.html',all_project=all_project,data=table_data, user=current_user)
 
-@views.route('/work_hours_summary', methods=['GET', 'POST'])
-@login_required
-def work_hours_summary():
-    # 데이터베이스에서 쿼리 수행
-    all_data_by_pcode_jobpart_department = db.session.query(
-        Working_hour.pcode,
-        Working_hour.jobpart,
-        User.udepartment,
-        func.sum(Working_hour.workhour).label('total_workhours')
-    ).filter(
-        Working_hour.pcode == '0777'  # 특정 pcode 조건 추가
-    ).join(
-        User, Working_hour.user_id == User.id
-    ).group_by(
-        Working_hour.pcode,
-        Working_hour.jobpart,
-        User.udepartment
-    ).order_by(
-        Working_hour.pcode.asc(),
-        Working_hour.jobpart.asc(),
-        User.udepartment.asc()
-    ).all()
-
-    # HTML 템플릿으로 데이터 전달
-    return render_template('work_hours_summary.html', data=all_data_by_pcode_jobpart_department, user=current_user)
-
 @views.route('/get_user_summary', methods=['GET','POST'])
 @login_required 
 def get_user_summary(): 
@@ -375,6 +349,34 @@ def get_user_summary():
     usersnames = get_username()
     return render_template('user_summary.html',uname=user_name, from_date=from_date, to_date=to_date,
                            working_hours=working_hours,users_name=usersnames, user=current_user)
+
+# @views.route('/work_hours_summary', methods=['GET', 'POST'])
+# @login_required
+# def work_hours_summary():
+#     # 데이터베이스에서 쿼리 수행
+#     all_data_by_pcode_jobpart_department = db.session.query(
+#         Working_hour.pcode,
+#         Working_hour.jobpart,
+#         User.udepartment,
+#         func.sum(Working_hour.workhour).label('total_workhours')
+#     ).filter(
+#         Working_hour.pcode == '0777'  # 특정 pcode 조건 추가
+#     ).join(
+#         User, Working_hour.user_id == User.id
+#     ).group_by(
+#         Working_hour.pcode,
+#         Working_hour.jobpart,
+#         User.udepartment
+#     ).order_by(
+#         Working_hour.pcode.asc(),
+#         Working_hour.jobpart.asc(),
+#         User.udepartment.asc()
+#     ).all()
+
+#     # HTML 템플릿으로 데이터 전달
+#     return render_template('work_hours_summary.html', data=all_data_by_pcode_jobpart_department, user=current_user)
+
+
 
 def all_projects():
     #종료일이 오늘 이후 것 가져옴
