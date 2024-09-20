@@ -2,7 +2,7 @@ from flask import Blueprint, render_template, request, flash, jsonify, redirect,
 from flask_login import login_required, current_user
 from .models import Note, Project, Cocompany,Working_hour, User
 from . import db
-from sqlalchemy import func, desc,  cast, Integer
+from sqlalchemy import func, desc,  cast, Integer, literal_column, text
 import json
 from datetime import date, timedelta ,datetime
 import holidays
@@ -294,22 +294,15 @@ def getdata_bydate():
         pcode = request.form.get('pcode',default="all")
         print(pcode)
         # 함수 호출 및 사용
-        results = get_data_by_date_department_jobpart(pcode)
+        results = get_data_by_department_jobpart(pcode)
         print(results)
 
-        # Step 1: SQLAlchemy 쿼리 결과를 DataFrame으로 변환
-        df = pd.DataFrame(results, columns=['department', 'jobpart', 'recodingdate', 'total_hours'])
-
-        # Step 2: 날짜별 데이터를 groupby()로 그룹화
-        grouped_df = df.groupby(['recodingdate', 'department', 'jobpart']).sum().reset_index()
-
-        # Step 3: grouped_df를 딕셔너리로 변환하여 Jinja2 템플릿에 전달
-        table_data = grouped_df.to_dict(orient='records')
+        
     else:
         
         return render_template('data_by.html',all_project=all_project,user=current_user)
     # Step 4: 데이터를 HTML 템플릿으로 전달
-    return render_template('data_by.html',all_project=all_project,data=table_data, user=current_user)
+    return render_template('data_by.html',all_project=all_project,data=results, user=current_user)
 
 @views.route('/get_user_summary', methods=['GET','POST'])
 @login_required 
@@ -399,29 +392,66 @@ def is_weekend_or_holiday(check_date):
         return True
     return False
 
+def get_data_by_department_jobpart(pcode):
+    today = date.today()
+    try:
+        if pcode == "all":
+            data_by_date_department_jobpart = db.session.query(
+                Working_hour.pcode,
+                User.udepartment, 
+                Working_hour.jobpart,
+                cast(func.sum(Working_hour.workhour), Integer).label('total_hours')
+                ).join(User, User.id == Working_hour.user_id
+                ).join(Project, Project.pcode == Working_hour.pcode
+                ).filter(func.date(Project.enddate) < today
+                ).group_by(Working_hour.pcode, User.udepartment, Working_hour.jobpart
+                ).order_by(Working_hour.pcode, User.udepartment, Working_hour.jobpart
+                ).all()
+            
+        else :
+            data_by_date_department_jobpart = db.session.query(
+                Working_hour.pcode,
+                User.udepartment,
+                Working_hour.jobpart,
+                cast(func.sum(Working_hour.workhour), Integer).label('total_hours')
+                ).join(User, User.id == Working_hour.user_id  
+                ).filter(Working_hour.pcode == pcode  # pcode 조건 추가
+                ).group_by(Working_hour.pcode, User.udepartment, Working_hour.jobpart
+                ).order_by(Working_hour.pcode, User.udepartment, Working_hour.jobpart
+                ).all()
+            
+        if not data_by_date_department_jobpart:
+            print("No data found")
+        
+        return data_by_date_department_jobpart
+
+    except Exception as e:
+        print("An error occurred:", e)
+        return []
+
 def get_data_by_date_department_jobpart(pcode):
     try:
         if pcode == "all":
             data_by_date_department_jobpart = db.session.query(
+                Working_hour.recodingdate,
                 User.udepartment, 
                 Working_hour.jobpart,
-                Working_hour.recodingdate,
                 cast(func.sum(Working_hour.workhour), Integer).label('total_hours')
                 ).join(Working_hour, User.id == Working_hour.user_id
-                ).group_by(User.udepartment, Working_hour.jobpart, Working_hour.recodingdate
+                ).group_by(User.udepartment, Working_hour.recodingdate, Working_hour.jobpart,
                 ).order_by(db.func.row_number().over(partition_by=User.udepartment, order_by=Working_hour.recodingdate.desc())
                 ).all()
             
                    #.order_by(Working_hour.recodingdate.desc()).all()
         else :
             data_by_date_department_jobpart = db.session.query(
+                Working_hour.recodingdate,
                 User.udepartment, 
                 Working_hour.jobpart,
-                Working_hour.recodingdate,
                 cast(func.sum(Working_hour.workhour), Integer).label('total_hours')
                 ).join(Working_hour, User.id == Working_hour.user_id  # Project 테이블과 JOIN
                 ).filter(Working_hour.pcode == pcode  # pcode 조건 추가
-                ).group_by(User.udepartment, Working_hour.jobpart, Working_hour.recodingdate
+                ).group_by(User.udepartment, Working_hour.recodingdate, Working_hour.jobpart
                 ).order_by(Working_hour.recodingdate.desc()).all()
         if not data_by_date_department_jobpart:
             print("No data found")
@@ -447,3 +477,7 @@ def get_username():
     except Exception as e:
         print("An error occurred:", e)
         return []
+
+
+
+

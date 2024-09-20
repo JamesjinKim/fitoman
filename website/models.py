@@ -31,7 +31,7 @@ class Project(db.Model):                                              #새 프�
     date = db.Column(db.DateTime(timezone=True), default=func.now())  #등록일자 timestamp
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))         #외래키 연동
 
-class Working_hour(db.Model):                                         #내가 참여중인 프로젝트에 MD를 매일 등록한다. 2번
+class Working_hour(db.Model):                                         #내가 참여중인 프로젝트에 MD를 매일 등록한다. 
     id = db.Column(db.Integer, primary_key=True)                      #DB primary_key ID
     pcode = db.Column(db.String(50), nullable=False)                  #프로젝트 코드
     pname = db.Column(db.String(100))                                 #프로젝트 이름

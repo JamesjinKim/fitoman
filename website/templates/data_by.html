@@ -1,10 +1,10 @@
 {% extends "base.html" %} 
 
-{% block title %}개인현황 조회{% endblock %} 
+{% block title %}프로젝트별 MD현황{% endblock %} 
 
 {% block content%}
   <div class="container mx-auto px-4 py-8">
-    <h1>프로젝트별 일일현황</h1>
+    <h1>프로젝트별 MD현황</h1>
 
     <div class="row">
       <div class="col-md-6">
@@ -27,26 +27,26 @@
     <table class="table table-striped table-bordered table-hover" id="table1">
       <thead>
         <tr>
-          <th>날짜</th>
+          <th>PCODE</th>
           <th>부서</th>
-          <th>업무</th>
-          <th>총 근무 시간</th>
+          <th>작업분야</th>
+          <th>총 근무시간</th>
         </tr>
       </thead>
       <tbody>
         {% if data %}
-            {% for row in data %}
-            <tr>
-                <td>{{ row['recodingdate'] }}</td>
-                <td>{{ row['department'] }}</td>
-                <td>{{ row['jobpart'] }}</td>
-                <td class="participation-time">{{ row['total_hours'] }}</td>
-            </tr>
-            {% endfor %}
+          {% for row in data %}
+          <tr>
+            <td>{{ row['pcode'] }}</td>
+            <td>{{ row['udepartment'] }}</td>
+            <td>{{ row['jobpart'] }}</td>
+            <td class="participation-time">{{ row['total_hours'] }}</td>
+          </tr>
+          {% endfor %}
         {% else %}
-            <tr>
-                <td colspan="4">데이터가 없습니다.</td>
-            </tr>
+          <tr>
+          <td colspan="4">데이터가 없습니다.</td>
+          </tr>
         {% endif %}
       </tbody>
       <tfoot>
@@ -58,7 +58,7 @@
         </tr>
     </tfoot>
     </table>
-    <button class="btn btn-success float-end" onclick="exportTableToExcel('table1', 'get_data_by_date_department_jobpart')">Excel로 저장</button>
+    <button class="btn btn-success float-end" onclick="exportTableToExcel('table1', 'get_data_by_department_jobpart')">Excel로 저장</button>
   </div>
 
   <script>
@@ -96,6 +96,57 @@
     const totalTimeElement = document.getElementById('total-time');
     totalTimeElement.textContent = totalTime + "";
 
+    //////////////////////////////// 소계 값 구하기
+    document.addEventListener('DOMContentLoaded', function() {
+      const table = document.getElementById('table1');
+      const tbody = table.querySelector('tbody');
+      const rows = Array.from(tbody.querySelectorAll('tr'));
+      const tfoot = table.querySelector('tfoot');
+    
+      let currentPcode = '';
+      let pcodeSubtotal = 0;
+      let totalTime = 0;
+      let count = 0;
+    
+      rows.forEach((row, index) => {
+        const pcode = row.cells[0].textContent;
+        const hours = parseInt(row.cells[3].textContent);
+    
+        if (pcode !== currentPcode) {
+          if (currentPcode !== '') {
+            insertSubtotalRow(tbody, currentPcode, pcodeSubtotal, index + count);
+            count++;
+          }
+          currentPcode = pcode;
+          pcodeSubtotal = 0;
+        }
+    
+        pcodeSubtotal += hours;
+        totalTime += hours;
+      });
+    
+      // 마지막 pcode의 소계 추가
+      insertSubtotalRow(tbody, currentPcode, pcodeSubtotal, rows.length + count);
+    
+      // Total 행 업데이트
+      const totalRow = tfoot.querySelector('tr');
+      totalRow.cells[1].textContent = (rows.length + count) + " 건";
+      totalRow.cells[3].textContent = totalTime;
+    });
+    
+    function insertSubtotalRow(tbody, pcode, subtotal, index) {
+      const subtotalRow = tbody.insertRow(index);
+      subtotalRow.className = 'table-secondary';
+      subtotalRow.innerHTML = `
+        <td colspan="3"><strong>${pcode} 소계</strong></td>
+        <td class="participation-time"><strong>${subtotal}</strong></td>
+      `;
+    }
+    //////////////////////////////// 소계 값 구하기 끝
+
+    
+
+
     //엑셀로 저장 함수
     function exportTableToExcel(tableID, filename = ''){
         // Select the table element
@@ -127,6 +178,8 @@
         for (var i=0; i<s.length; i++) view[i] = s.charCodeAt(i) & 0xFF;
         return buf;
     }
+
+    
   </script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   {% endblock %}
