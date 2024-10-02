@@ -1,6 +1,6 @@
 {% extends "base.html" %} 
 
-{% block title %}Work Hours{% endblock %} 
+{% block title %}업무시간등록{% endblock %} 
 
 {% block content%}
 <div class="container">
@@ -30,7 +30,7 @@
             <div class="modal-dialog">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h4 class="modal-title"> Add workhour </h4>
+                        <h4 class="modal-title"> 업무시간 등록 </h4>
                     </div>
                     <div class="modal-body">
                         <form action="{{url_for('views.work_hour')}}" method="POST">
@@ -95,11 +95,11 @@
         <table class="table table-hover table-responsive-sm" id="table1">
             <thead>
                 <tr>
-                <th>No</th>
-                <th>Order</th>
-                <th>JOB</th>
-                <th>WH</th>
-                <th>Date</th>
+                <th>번호</th>
+                <th>오더</th>
+                <th>업무</th>
+                <th>시간</th>
+                <th>날짜</th>
                 <th></th>
                 </tr>
             </thead>

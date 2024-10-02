@@ -71,7 +71,7 @@ def work_hour():
                                  jobpart=jobpart,workhour=workhour,recodingdate=recodingdate, user_id=current_user.id )
         db.session.add(workhours)
         db.session.commit()
-        msg = "Record successfully added to database"
+        msg = "데이터 저장이 완료되었습니다."
         flash(msg, category='success')
     
      # 오늘, 어제 날짜 계산
@@ -91,7 +91,7 @@ def work_hour():
             Working_hour.user_id == current_user.id
         ).first()
         if not yesterday_data:
-            flash("No Data for yesterday", category='error')
+            flash("어제의 근무시간 기록이 입력되지 않았습니다.", category='error')
 
     # 종료되지 않은 프로젝트 리스트
     projects = Project.query.with_entities(Project.pcode, Project.pname).filter(Project.enddate > today).all()
@@ -118,7 +118,7 @@ def workhour_update():
             my_data.recodingdate = recodedate
         
         db.session.commit()
-        flash("Employee Updated Successfully")
+        flash("정보가 잘 저장되었습니다.")
         return redirect(url_for('views.work_hour'))
 
 @views.route('/workhour_delete/<id>', methods=['GET','POST'])
@@ -154,7 +154,7 @@ def project_create():
                        user_id=current_user.id )
         db.session.add(proj)
         db.session.commit()
-        msg = "Record successfully added to database"
+        msg = "정보가 잘 저장되었습니다."
         flash(msg, category='success')
 
     all_data = all_projects()
@@ -176,7 +176,7 @@ def project_update():
         
         print(my_data)
         db.session.commit()
-        flash("Project Updated Successfully")
+        flash("정보가 잘 변경 되었습니다.")
         return redirect(url_for('views.project_create'))
 
 @views.route('/project_delete/<pid>/', methods=['GET', 'POST'])
@@ -209,7 +209,7 @@ def cocompany_create():
                        saboss=saboss,saaddr=saaddr,sacontact=sacontact,saemail=saemail,sadate=today)
         db.session.add(cocomp)
         db.session.commit()
-        msg = "Record successfully added to database"
+        msg = "정보가 잘 저장되었습니다."
         flash(msg, category='success')
         
     task_list = ["전장외주","조립외주","제어외주","기타"]    
@@ -343,33 +343,6 @@ def get_user_summary():
     return render_template('user_summary.html',uname=user_name, from_date=from_date, to_date=to_date,
                            working_hours=working_hours,users_name=usersnames, user=current_user)
 
-# @views.route('/work_hours_summary', methods=['GET', 'POST'])
-# @login_required
-# def work_hours_summary():
-#     # 데이터베이스에서 쿼리 수행
-#     all_data_by_pcode_jobpart_department = db.session.query(
-#         Working_hour.pcode,
-#         Working_hour.jobpart,
-#         User.udepartment,
-#         func.sum(Working_hour.workhour).label('total_workhours')
-#     ).filter(
-#         Working_hour.pcode == '0777'  # 특정 pcode 조건 추가
-#     ).join(
-#         User, Working_hour.user_id == User.id
-#     ).group_by(
-#         Working_hour.pcode,
-#         Working_hour.jobpart,
-#         User.udepartment
-#     ).order_by(
-#         Working_hour.pcode.asc(),
-#         Working_hour.jobpart.asc(),
-#         User.udepartment.asc()
-#     ).all()
-
-#     # HTML 템플릿으로 데이터 전달
-#     return render_template('work_hours_summary.html', data=all_data_by_pcode_jobpart_department, user=current_user)
-
-
 
 def all_projects():
     #종료일이 오늘 이후 것 가져옴
@@ -421,7 +394,7 @@ def get_data_by_department_jobpart(pcode):
                 ).all()
             
         if not data_by_date_department_jobpart:
-            print("No data found")
+            print("데이터가 없습니다.")
         
         return data_by_date_department_jobpart
 
@@ -454,7 +427,7 @@ def get_data_by_date_department_jobpart(pcode):
                 ).group_by(User.udepartment, Working_hour.recodingdate, Working_hour.jobpart
                 ).order_by(Working_hour.recodingdate.desc()).all()
         if not data_by_date_department_jobpart:
-            print("No data found")
+            print("데이터가 없습니다.")
         
         return data_by_date_department_jobpart
 
