@@ -54,7 +54,7 @@ def work_hour():
     task_list = {
         "설계": ["설계", "현장지원", "SETUP"],
         "전장": ["전장설계", "전장조립", "SETUP"],
-        "제어": ["PC제어", "PLC제어", "SETUP"],
+        "제어": ["PC제어", "PLC제어","비젼개발", "SETUP"],
         "기술": ["조립", "현장관리", "SETUP"]
         }
         
@@ -307,40 +307,68 @@ def getdata_bydate():
 @views.route('/get_user_summary', methods=['GET','POST'])
 @login_required 
 def get_user_summary(): 
-    # Your Python function code here
     user_name = request.form.get('iuname',default="")
     from_date = request.form.get('from_date',default=date.today())
     to_date = request.form.get('to_date',default=date.today())
-
-    working_hours = db.session.query(
-        Working_hour.username,
-        Working_hour.pcode,
-        Working_hour.pname,
-        User.udepartment,
-        Working_hour.jobpart,
-        Working_hour.recodingdate,
-        func.sum(Working_hour.workhour).label('total_workhour')
-    ).join(
-            User, Working_hour.user_id == User.id
-    ).filter(
-        Working_hour.username == user_name,
-        Working_hour.recodingdate >= from_date,
-        Working_hour.recodingdate <= to_date
-    ).group_by(
-        Working_hour.username,
-        Working_hour.pcode,
-        Working_hour.pname,
-        User.udepartment,
-        Working_hour.jobpart,
-        Working_hour.recodingdate
-    ).order_by(
-        Working_hour.recodingdate.asc(),
-        Working_hour.pcode.asc()
-    ).all()
-    # print(working_hours) 
-
-    usersnames = get_username()
-    return render_template('user_summary.html',uname=user_name, from_date=from_date, to_date=to_date,
+    if user_name != "All":
+        working_hours = db.session.query(
+            Working_hour.username,
+            Working_hour.pcode,
+            Working_hour.pname,
+            User.udepartment,
+            Working_hour.jobpart,
+            Working_hour.recodingdate,
+            func.sum(Working_hour.workhour).label('total_workhour')
+        ).join(
+                User, Working_hour.user_id == User.id
+        ).filter(
+            Working_hour.username == user_name,
+            Working_hour.recodingdate >= from_date,
+            Working_hour.recodingdate <= to_date
+        ).group_by(
+            Working_hour.username,
+            Working_hour.pcode,
+            Working_hour.pname,
+            User.udepartment,
+            Working_hour.jobpart,
+            Working_hour.recodingdate
+        ).order_by(
+            Working_hour.recodingdate.asc(),
+            Working_hour.pcode.asc()
+        ).all()
+        print(user_name)
+        print(working_hours) 
+        usersnames = get_username()
+        return render_template('user_summary.html',uname=user_name, from_date=from_date, to_date=to_date,
+                           working_hours=working_hours,users_name=usersnames, user=current_user)
+    else:
+        working_hours = db.session.query(
+            Working_hour.username,
+            Working_hour.pcode,
+            Working_hour.pname,
+            User.udepartment,
+            Working_hour.jobpart,
+            Working_hour.recodingdate,
+            func.sum(Working_hour.workhour).label('total_workhour')
+        ).join(
+            User, Working_hour.user_id == User.id  # join 추가
+        ).filter(
+            Working_hour.recodingdate >= from_date,
+            Working_hour.recodingdate <= to_date
+        ).group_by(
+            Working_hour.username,
+            Working_hour.pcode,
+            Working_hour.pname,
+            User.udepartment,
+            Working_hour.jobpart,
+            Working_hour.recodingdate
+        ).order_by(
+            Working_hour.recodingdate.asc(),
+            Working_hour.pcode.asc()
+        ).all()
+        print(user_name)
+        usersnames = get_username()
+        return render_template('user_summary.html',uname=user_name, from_date=from_date, to_date=to_date,
                            working_hours=working_hours,users_name=usersnames, user=current_user)
 
 

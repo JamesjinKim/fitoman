@@ -12,6 +12,7 @@
                 <div class="col-md-6">
                     <label>대상자 선택:{{ uname }}</label>
                     <select id="uname" name="iuname" class="form-control">
+                        <option value="All">All users</option>  <!-- All user 항목 추가 -->
                         <option value="{{ uname }}" selected></option>
                         {% for row in users_name %}
                             <option value="{{ row.uname }}">{{ row.uname }}</option>
@@ -29,13 +30,13 @@
                 </div>
             </div>
             <button class="btn btn-primary" id="run-flask-btn">개인현황 조회</button>
-            
         </form>
         <br>
         <table class="table table-hover table-striped table-responsive-sm" id="table1">
             <thead>                
                 <tr>
                     <th>날짜</th>
+                    <th>이름</th>
                     <th>오더번호</th>
                     <th>오더명</th>
                     <th>부서</th>
@@ -47,6 +48,7 @@
                 {% for row in working_hours %}
                 <tr>
                     <td>{{ row.recodingdate }}</td>  <!-- 순번 표시 -->
+                    <td>{{ row.username }}</td>
                     <td>{{ row.pcode }}</td>
                     <td>{{ row.pname }}</td>
                     <td>{{ row.udepartment }}</td>
@@ -93,7 +95,6 @@
             localStorage.setItem('to_date', toDate);
         }
         
-
         // 참여시간을 가진 모든 td 태그 선택
         const participationTimes = document.querySelectorAll('.participation-time');
 
