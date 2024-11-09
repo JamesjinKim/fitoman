@@ -50,59 +50,92 @@ def delete_note():
 @views.route('/work_hour', methods=['GET','POST'])
 @login_required
 def work_hour():  
-    # 업무 리스트 데이터 생성
-    task_list = {
-        "설계": ["설계", "현장지원", "SETUP"],
-        "전장": ["전장설계", "전장조립", "SETUP"],
-        "제어": ["PC제어", "PLC제어","비젼개발", "SETUP"],
-        "기술": ["조립", "현장관리", "SETUP"]
-        }
+    try:
+        # 업무 리스트 데이터 생성
+        task_list = {
+            "설계": ["설계", "현장지원", "SETUP"],
+            "전장": ["전장설계", "전장조립", "SETUP"],
+            "제어": ["PC제어", "PLC제어","비젼개발", "SETUP"],
+            "기술": ["조립", "현장관리", "SETUP"]
+            }
+            
+        if request.method == 'POST': 
+            pcode = request.form.get('pcode')
+            pname = request.form.get('pname')
+            uname = request.form.get('username')
+            jobpart = request.form.get('jobpart')
+            workhour = request.form.get('workhour')
+            recodingdate = request.form.get('recodingdate')
+            
+            # 필수 필드 검증
+            if not all([pcode, pname, uname, jobpart, workhour]):
+                flash("모든 필수 항목을 입력해주세요.", category='error')
+                return redirect(url_for('views.work_hour'))
+            
+            # 작업시간 유효성 검사
+            try:
+                workhour = float(workhour)
+                if workhour <= 0 or workhour > 24:
+                    flash("유효한 작업시간을 입력해주세요 (0-24시간).", category='error')
+                    return redirect(url_for('views.work_hour'))
+            except ValueError:
+                flash("작업시간은 숫자로 입력해주세요.", category='error')
+                return redirect(url_for('views.work_hour'))
+
+            if recodingdate == "":
+                recodingdate = date.today()
+            
+            try:
+                workhours = Working_hour(pcode=pcode,pname=pname,username=uname,
+                                     jobpart=jobpart,workhour=workhour,recodingdate=recodingdate, user_id=current_user.id )
+                db.session.add(workhours)
+                db.session.commit()
+                msg = "데이터 저장이 완료되었습니다."
+                flash(msg, category='success')
+            except Exception as e:
+                db.session.rollback()
+                flash("데이터 저장 중 오류가 발생했습니다.", category='error')
+                return redirect(url_for('views.work_hour'))
         
-    if request.method == 'POST': 
-        pcode = request.form.get('pcode')
-        pname = request.form.get('pname')
-        uname = request.form.get('username')
-        jobpart = request.form.get('jobpart')
-        workhour = request.form.get('workhour')
-        recodingdate = request.form.get('recodingdate')
-        if recodingdate == "":
-            recodingdate = date.today()
-        workhours = Working_hour(pcode=pcode,pname=pname,username=uname,
-                                 jobpart=jobpart,workhour=workhour,recodingdate=recodingdate, user_id=current_user.id )
-        db.session.add(workhours)
-        db.session.commit()
-        msg = "데이터 저장이 완료되었습니다."
-        flash(msg, category='success')
-    
-     # 오늘, 어제 날짜 계산
-    today = date.today()
-    yesterday = today - timedelta(days=1)
-    one_month_ago = today - timedelta(days=30)
+        # 오늘, 어제 날짜 계산
+        today = date.today()
+        yesterday = today - timedelta(days=1)
+        one_month_ago = today - timedelta(days=30)
 
-    # 주말 또는 공휴일 여부 확인
-    if is_weekend_or_holiday(yesterday):
-        flash("어제는 주말 또는 공휴일이므로 근무 시간을 입력하지 않습니다.", category='info')
-        #return redirect(url_for('views.work_hour'))  # 입력을 막고 다른 페이지로 리디렉션
+        # 주말 또는 공휴일 여부 확인
+        if is_weekend_or_holiday(yesterday):
+            flash("어제는 주말 또는 공휴일이므로 근무 시간을 입력하지 않습니다.", category='info')
 
-    else:  # 주말이 아닌 경우에만 어제 데이터 확인
-        # 어제 날짜의 데이터가 있는지 확인
-        yesterday_data = Working_hour.query.filter(
-            Working_hour.recodingdate == yesterday,
-            Working_hour.user_id == current_user.id
-        ).first()
-        if not yesterday_data:
-            flash("어제의 근무시간 기록이 입력되지 않았습니다.", category='error')
+        else:  # 주말이 아닌 경우에만 어제 데이터 확인
+            try:
+                # 어제 날짜의 데이터가 있는지 확인
+                yesterday_data = Working_hour.query.filter(
+                    Working_hour.recodingdate == yesterday,
+                    Working_hour.user_id == current_user.id
+                ).first()
+                if not yesterday_data:
+                    flash("어제의 근무시간 기록이 입력되지 않았습니다.", category='error')
+            except Exception as e:
+                flash("데이터 조회 중 오류가 발생했습니다.", category='error')
 
-    # 종료되지 않은 프로젝트 리스트
-    projects = Project.query.with_entities(Project.pcode, Project.pname).filter(Project.enddate > today).all()
+        try:
+            # 종료되지 않은 프로젝트 리스트
+            projects = Project.query.with_entities(Project.pcode, Project.pname).filter(Project.enddate > today).all()
 
-    # 한 달 전부터 오늘까지의 근무 시간 데이터 가져오기
-    wh_data = Working_hour.query.filter(
-        Working_hour.recodingdate >= one_month_ago,
-        Working_hour.user_id == current_user.id
-    ).order_by(Working_hour.recodingdate.desc()).all()
+            # 한 달 전부터 오늘까지의 근무 시간 데이터 가져오기
+            wh_data = Working_hour.query.filter(
+                Working_hour.recodingdate >= one_month_ago,
+                Working_hour.user_id == current_user.id
+            ).order_by(Working_hour.recodingdate.desc()).all()
 
-    return render_template("work_hour.html", data=task_list, all_data=projects, wh_data=wh_data, user=current_user)
+            return render_template("work_hour.html", data=task_list, all_data=projects, wh_data=wh_data, user=current_user)
+        except Exception as e:
+            flash("프로젝트 데이터 조회 중 오류가 발생했습니다.", category='error')
+            return render_template("work_hour.html", data=task_list, all_data=[], wh_data=[], user=current_user)
+            
+    except Exception as e:
+        flash(f"작업시간 입력 중 오류가 발생했습니다: {str(e)}", category='error')
+        return render_template("work_hour.html", data=task_list, all_data=[], wh_data=[], user=current_user)
 
 @views.route('/workhour_update', methods = ['POST'])
 def workhour_update():
@@ -144,18 +177,36 @@ def project_view():
 @login_required
 def project_create():
     if request.method == 'POST': 
-        pcode = request.form.get('projCode')                                        #프로젝트코드
-        pname = request.form.get('projName')                                        #프로젝트명
-        pdesc = request.form.get('pdesc')                                           #프로젝트 설명
-        startdate = request.form.get('startDate')                                   #시작일
-        enddate = request.form.get('endDate')                                       #종료일
+        try:
+            pcode = request.form.get('projCode')
+            pname = request.form.get('projName')
+            pdesc = request.form.get('pdesc')
+            startdate = request.form.get('startDate')
+            enddate = request.form.get('endDate')
+            
+            # 필수 필드 검증
+            if not all([pcode, pname, startdate, enddate]):
+                flash("모든 필수 항목을 입력해주세요.", category='error')
+                return redirect(url_for('views.project_create'))
+            
+            # 날짜 형식 검증
+            try:
+                datetime.strptime(startdate, '%Y-%m-%d')
+                datetime.strptime(enddate, '%Y-%m-%d')
+            except ValueError:
+                flash("올바른 날짜 형식이 아닙니다.", category='error')
+                return redirect(url_for('views.project_create'))
 
-        proj = Project(pcode=pcode,pname=pname,pdesc=pdesc,startdate=startdate,enddate=enddate,
-                       user_id=current_user.id )
-        db.session.add(proj)
-        db.session.commit()
-        msg = "정보가 잘 저장되었습니다."
-        flash(msg, category='success')
+            proj = Project(pcode=pcode, pname=pname, pdesc=pdesc,
+                         startdate=startdate, enddate=enddate,
+                         user_id=current_user.id)
+            db.session.add(proj)
+            db.session.commit()
+            flash("정보가 잘 저장되었습니다.", category='success')
+            
+        except Exception as e:
+            db.session.rollback()
+            flash(f"프로젝트 생성 중 오류가 발생했습니다: {str(e)}", category='error')
 
     all_data = all_projects()
     return render_template("projectcreate.html",all_data=all_data, user=current_user)
@@ -396,38 +447,37 @@ def is_weekend_or_holiday(check_date):
 def get_data_by_department_jobpart(pcode):
     today = date.today()
     try:
-        if pcode == "all":
-            data_by_date_department_jobpart = db.session.query(
-                Working_hour.pcode,
-                User.udepartment, 
-                Working_hour.jobpart,
-                cast(func.sum(Working_hour.workhour), Integer).label('total_hours')
-                ).join(User, User.id == Working_hour.user_id
-                ).join(Project, Project.pcode == Working_hour.pcode
-                ).filter(func.date(Project.enddate) < today
-                ).group_by(Working_hour.pcode, User.udepartment, Working_hour.jobpart
-                ).order_by(Working_hour.pcode, User.udepartment, Working_hour.jobpart
-                ).all()
+        if not isinstance(pcode, str):
+            raise ValueError("프로젝트 코드는 문자열이어야 합니다.")
             
-        else :
-            data_by_date_department_jobpart = db.session.query(
-                Working_hour.pcode,
-                User.udepartment,
-                Working_hour.jobpart,
-                cast(func.sum(Working_hour.workhour), Integer).label('total_hours')
-                ).join(User, User.id == Working_hour.user_id  
-                ).filter(Working_hour.pcode == pcode  # pcode 조건 추가
-                ).group_by(Working_hour.pcode, User.udepartment, Working_hour.jobpart
-                ).order_by(Working_hour.pcode, User.udepartment, Working_hour.jobpart
-                ).all()
-            
-        if not data_by_date_department_jobpart:
-            print("데이터가 없습니다.")
+        query = db.session.query(
+            Working_hour.pcode,
+            User.udepartment, 
+            Working_hour.jobpart,
+            cast(func.sum(Working_hour.workhour), Integer).label('total_hours')
+        ).join(User, User.id == Working_hour.user_id)
         
-        return data_by_date_department_jobpart
-
+        if pcode == "all":
+            query = query.join(Project, Project.pcode == Working_hour.pcode)\
+                        .filter(func.date(Project.enddate) < today)
+        else:
+            query = query.filter(Working_hour.pcode == pcode)
+            
+        result = query.group_by(
+            Working_hour.pcode, User.udepartment, Working_hour.jobpart
+        ).order_by(
+            Working_hour.pcode, User.udepartment, Working_hour.jobpart
+        ).all()
+        
+        if not result:
+            print("데이터가 없습니다.")
+            return []
+            
+        return result
+        
     except Exception as e:
-        print("An error occurred:", e)
+        print(f"데이터 조회 중 오류 발생: {str(e)}")
+        # 로깅 추가 권장
         return []
 
 def get_data_by_date_department_jobpart(pcode):
