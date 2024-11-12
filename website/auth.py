@@ -37,7 +37,7 @@ def logout():
 @auth.route('/sign-up', methods=['GET', 'POST'])
 def sign_up():
     # 리스트 데이터 생성
-    task_list = ["영업","설계","전장","기술","제어","외주"]
+    task_list = ["설계","전장","기술","제어"]
     if request.method == 'POST':
         email = request.form.get('email')
         uname = request.form.get('userName')

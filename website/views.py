@@ -20,13 +20,13 @@ def home():
         note = request.form.get('note')#Gets the note from the HTML 
 
         if len(note) < 1:
-            flash('Note is too short!', category='error') 
+            flash('공지 내용이 너무 짧습니다!', category='error') 
         else:
             name = current_user.uname
             new_note = Note(data=note, noteuname=name, user_id=current_user.id)  #providing the schema for the note 
             db.session.add(new_note) #adding the note to the database 
             db.session.commit()
-            flash('Note added!', category='success')
+            flash('공지 등록 완료!', category='success')
         
     all_data = Note.query.order_by(desc(Note.date)).all()
 
@@ -335,7 +335,7 @@ def workhour_total():
 
     return render_template("workhourtotal.html",all_data=all_data,user=current_user)
 
-#일일현황 - 날짜별 부서별 jobpart별 업무시간
+#프로젝트별 MD현황 - 날짜별 부서별 jobpart별 업무시간
 @views.route('/getdata_bydate', methods=['GET', 'POST'])
 @login_required
 def getdata_bydate():
@@ -343,10 +343,10 @@ def getdata_bydate():
     all_project = all_projects()
     if request.method == 'POST': 
         pcode = request.form.get('pcode',default="all")
-        print(pcode)
+        #print(pcode)
         # 함수 호출 및 사용
         results = get_data_by_department_jobpart(pcode)
-        print(results)
+        #print(results)
 
         
     else:
@@ -444,8 +444,10 @@ def is_weekend_or_holiday(check_date):
         return True
     return False
 
+#프로젝트별 MD 부서별, 작업분야별 현황
 def get_data_by_department_jobpart(pcode):
     today = date.today()
+    print("Today::::" + str(today))
     try:
         if not isinstance(pcode, str):
             raise ValueError("프로젝트 코드는 문자열이어야 합니다.")
@@ -457,12 +459,15 @@ def get_data_by_department_jobpart(pcode):
             cast(func.sum(Working_hour.workhour), Integer).label('total_hours')
         ).join(User, User.id == Working_hour.user_id)
         
+        #Project Enddate가 오늘 보다 큰것만 가져온다. 
         if pcode == "all":
             query = query.join(Project, Project.pcode == Working_hour.pcode)\
-                        .filter(func.date(Project.enddate) < today)
+                        .filter(func.date(Project.enddate) >= today.strftime('%Y-%m-%d'))
+            print(query)
         else:
             query = query.filter(Working_hour.pcode == pcode)
-            
+            print(query)
+
         result = query.group_by(
             Working_hour.pcode, User.udepartment, Working_hour.jobpart
         ).order_by(
@@ -480,39 +485,6 @@ def get_data_by_department_jobpart(pcode):
         # 로깅 추가 권장
         return []
 
-def get_data_by_date_department_jobpart(pcode):
-    try:
-        if pcode == "all":
-            data_by_date_department_jobpart = db.session.query(
-                Working_hour.recodingdate,
-                User.udepartment, 
-                Working_hour.jobpart,
-                cast(func.sum(Working_hour.workhour), Integer).label('total_hours')
-                ).join(Working_hour, User.id == Working_hour.user_id
-                ).group_by(User.udepartment, Working_hour.recodingdate, Working_hour.jobpart,
-                ).order_by(db.func.row_number().over(partition_by=User.udepartment, order_by=Working_hour.recodingdate.desc())
-                ).all()
-            
-                   #.order_by(Working_hour.recodingdate.desc()).all()
-        else :
-            data_by_date_department_jobpart = db.session.query(
-                Working_hour.recodingdate,
-                User.udepartment, 
-                Working_hour.jobpart,
-                cast(func.sum(Working_hour.workhour), Integer).label('total_hours')
-                ).join(Working_hour, User.id == Working_hour.user_id  # Project 테이블과 JOIN
-                ).filter(Working_hour.pcode == pcode  # pcode 조건 추가
-                ).group_by(User.udepartment, Working_hour.recodingdate, Working_hour.jobpart
-                ).order_by(Working_hour.recodingdate.desc()).all()
-        if not data_by_date_department_jobpart:
-            print("데이터가 없습니다.")
-        
-        return data_by_date_department_jobpart
-
-    except Exception as e:
-        print("An error occurred:", e)
-        return []
-    
 
 def get_username():
     try:
@@ -521,7 +493,7 @@ def get_username():
         ).all()
 
         if not get_usersname:
-            print("No data found")
+            print("데이터가 없습니다.")
         
         return get_usersname
 
@@ -532,3 +504,36 @@ def get_username():
 
 
 
+# def get_data_by_date_department_jobpart(pcode):
+#     try:
+#         if pcode == "all":
+#             data_by_date_department_jobpart = db.session.query(
+#                 Working_hour.recodingdate,
+#                 User.udepartment, 
+#                 Working_hour.jobpart,
+#                 cast(func.sum(Working_hour.workhour), Integer).label('total_hours')
+#                 ).join(Working_hour, User.id == Working_hour.user_id
+#                 ).group_by(User.udepartment, Working_hour.recodingdate, Working_hour.jobpart,
+#                 ).order_by(db.func.row_number().over(partition_by=User.udepartment, order_by=Working_hour.recodingdate.desc())
+#                 ).all()
+            
+#                    #.order_by(Working_hour.recodingdate.desc()).all()
+#         else :
+#             data_by_date_department_jobpart = db.session.query(
+#                 Working_hour.recodingdate,
+#                 User.udepartment, 
+#                 Working_hour.jobpart,
+#                 cast(func.sum(Working_hour.workhour), Integer).label('total_hours')
+#                 ).join(Working_hour, User.id == Working_hour.user_id  # Project 테이블과 JOIN
+#                 ).filter(Working_hour.pcode == pcode  # pcode 조건 추가
+#                 ).group_by(User.udepartment, Working_hour.recodingdate, Working_hour.jobpart
+#                 ).order_by(Working_hour.recodingdate.desc()).all()
+#         if not data_by_date_department_jobpart:
+#             print("데이터가 없습니다.")
+        
+#         return data_by_date_department_jobpart
+
+#     except Exception as e:
+#         print("An error occurred:", e)
+#         return []
+    

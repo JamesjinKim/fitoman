@@ -165,7 +165,7 @@
                                 </div>
 
                                 <div class="modal-footer">
-                                    <button class="btn btn-info" type="submit"> Update</button>
+                                    <button class="btn btn-info" type="submit" id="submitBtn" disabled> Update</button>
                                     <button class="btn btn-secondary" data-dismiss="modal">Close</button>
                                 </div>
 
@@ -226,6 +226,26 @@
     totalCount.textContent = count + " 건";
     const totalTimeElement = document.getElementById('total-time');
     totalTimeElement.textContent = totalTime + "";
+
+    //jobpart가 선택되지 않은 경우 버튼이 비활성화되고, 선택되면 활성화됩니다.
+    // DOM이 완전히 로드된 후 실행
+    document.addEventListener('DOMContentLoaded', function() {
+        // 모든 모달 내의 jobpart select와 submit 버튼을 찾아서 처리
+        document.querySelectorAll('.modal').forEach(modal => {
+            const jobpartSelect = modal.querySelector('select[name="jobpart"]');
+            const submitBtn = modal.querySelector('button[type="submit"]');
+            
+            if (jobpartSelect && submitBtn) {
+                // 초기 상태 설정
+                submitBtn.disabled = !jobpartSelect.value;
+                
+                // 변경 이벤트 리스너
+                jobpartSelect.addEventListener('change', function() {
+                    submitBtn.disabled = !this.value;
+                });
+            }
+        });
+    });
 </script>
 
 {% endblock %}

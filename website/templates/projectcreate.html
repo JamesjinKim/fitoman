@@ -2,8 +2,54 @@
 {% block title %}프로젝트 등록{% endblock %} 
 
 {% block content %}
-<div class="container">
-  <div class="table-wrapper">
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
+<!-- CSS 스타일 추가 -->
+<style>
+  .table td, .table th {
+    max-width: 200px; /* 최대 너비 설정 */
+    white-space: nowrap; /* 줄바꿈 방지 */
+    overflow: hidden; /* 넘치는 내용 숨김 */
+    text-overflow: ellipsis; /* 넘치는 텍스트에 ... 표시 */
+  }
+  
+  /* 마우스 호버시 전체 텍스트 보이기 */
+  .table td:hover {
+    white-space: normal;
+    overflow: visible;
+    word-break: break-all;
+  }
+
+  /* 각 열의 너비 조정 */
+  .table th:nth-child(1), /* ID 열 */
+  .table td:nth-child(1) {
+    width: 5%;
+  }
+  .table th:nth-child(2), /* 프로젝트 No 열 */
+  .table td:nth-child(2) {
+    width: 15%;
+  }
+  .table th:nth-child(3), /* 프로젝트 명 열 */
+  .table td:nth-child(3) {
+    width: 20%;
+  }
+  .table th:nth-child(4), /* 프로젝트 설명 열 */
+  .table td:nth-child(4) {
+    width: 30%;
+  }
+  .table th:nth-child(5), /* 시작일 열 */
+  .table td:nth-child(5),
+  .table th:nth-child(6), /* 종료일 열 */
+  .table td:nth-child(6) {
+    width: 10%;
+  }
+  .table th:nth-child(7), /* 버튼 열 */
+  .table td:nth-child(7) {
+    width: 10%;
+  }
+</style>
+<body class="bg-gray-100">
+  <div class="container mx-auto px-4 py-8">
+      <!-- Form 시작 -->
     <form method="POST">
       <h3 align="center">프로젝트 등록</h3>
         <div class="row">
@@ -60,17 +106,17 @@
         <label for="endDate">종료일&nbsp;&nbsp;</label>        
         <input type="date" id="endDate" name="endDate" data-date-format="yymmdd">
         </div>
-        
       </div>
       <br>
       <div align="right">
         <button type="submit" class="btn btn-primary">프로젝트 등록</button>
       </div>
     </form>
+    <!--From 종료-->
     <br><hr>
     <table class="table table-hover table-striped table-responsive-sm" id="table1">
       <thead>
-          <tr>
+        <tr>
           <th>ID</th>
           <th>프로젝트 No</th>
           <th>프로젝트 명</th>
@@ -78,72 +124,73 @@
           <th>시작일</th>
           <th>종료일</th>
           <th></th>
-          </tr>
-      </thead>
-      {% for row in all_data %}
-      <tbody>
-        <tr>
-          <td>{{row.pid}}</td>
-          <td>{{row.pcode}}</td>
-          <td>{{row.pname}}</td>
-          <td>{{row.pdesc}}</td>
-          <td>{{row.startdate}}</td>
-          <td>{{row.enddate}}</td>
-          <td>
-            <a href="/views.project_update/{{row.pid}}" class="btn btn-warning btn-xs" data-toggle="modal" data-target="#modaledit{{row.pid}}">Edit</a>
-            <a href="/project_delete/{{row.pid}}" class="btn btn-danger btn-xs" onclick="return confirm('이 데이터를 삭제하시겠습니까?')">삭제</a>
-          </td>
         </tr>
-      </tbody>
-        <!-- Model for updating working_hours data -->
-        <div id="modaledit{{row.pid}}" class="modal fade" role="dialog">
-          <div class="modal-dialog">
-              <div class="modal-content">
-                  <div class="modal-header">
-                      <h4 class="modal-title"> Update working_hours Data </h4>
-                  </div>
-                  <div class="modal-body">
-                      <form action="{{url_for('views.project_update')}}" method="POST">
-  
-                          <div class="form-group">
-                              <label>프로젝트 코드</label>
-                              <input type="hidden" name="pid" value="{{row.pid}}">
-                              <input type="text" class="form-control" name="pcode" value="{{row.pcode}}" required="1">
-                          </div>
-  
-                          <div class="form-group">
-                              <label>프로젝트 명</label>
-                              <input type="text" class="form-control" name="pname" value="{{row.pname}}" required="1">
-                          </div>
-  
-                          <div class="form-group">
-                              <label>프로젝트 설명</label>
-                              <input type="text" class="form-control" name="pdesc" value="{{row.pdesc}}" required="1">
-                          </div>
-  
-                          <div class="parent">
-                            <div class="child1">
-                            <label for="startDate">시작일&nbsp;&nbsp;</label>        
-                            <input type="date" id="startDate" name="startDate" data-date-format="yymmdd">
+      </thead>
+      <tbody>
+        {% for row in all_data %}
+          <tr>
+            <td>{{row.pid}}</td>
+            <td>{{row.pcode}}</td>
+            <td>{{row.pname}}</td>
+            <td>{{row.pdesc}}</td>
+            <td>{{row.startdate}}</td>
+            <td>{{row.enddate}}</td>
+            <td>
+              <a href="/views.project_update/{{row.pid}}" class="btn btn-warning btn-xs" data-toggle="modal" data-target="#modaledit{{row.pid}}">Edit</a>
+              <a href="/project_delete/{{row.pid}}" class="btn btn-danger btn-xs" onclick="return confirm('이 데이터를 삭제하시겠습니까?')">삭제</a>
+            </td>
+          </tr>
+
+          <!-- 각 행에 대한 모달 -->
+          <div id="modaledit{{row.pid}}" class="modal fade" role="dialog">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h4 class="modal-title">프로젝트 정보 수정</h4>
+                    </div>
+                    <div class="modal-body">
+                        <form action="{{url_for('views.project_update')}}" method="POST">
+            
+                            <div class="form-group">
+                                <label>프로젝트 코드</label>
+                                <input type="hidden" name="pid" value="{{row.pid}}">
+                                <input type="text" class="form-control" name="pcode" value="{{row.pcode}}" required="1">
                             </div>
-                            <div class="child1">
-                            <label for="endDate">종료일&nbsp;&nbsp;</label>        
-                            <input type="date" id="endDate" name="endDate" data-date-format="yymmdd">
+            
+                            <div class="form-group">
+                                <label>프로젝트 명</label>
+                                <input type="text" class="form-control" name="pname" value="{{row.pname}}" required="1">
                             </div>
-                          </div>
-  
-                          <div class="modal-footer">
-                              <button class="btn btn-info" type="submit"> Update</button>
-                              <button class="btn btn-secondary" data-dismiss="modal">Close</button>
-                          </div>
-  
-                      </form>
-                  </div>
-              </div>
+            
+                            <div class="form-group">
+                                <label>프로젝트 설명</label>
+                                <input type="text" class="form-control" name="pdesc" value="{{row.pdesc}}" required="1">
+                            </div>
+            
+                            <div class="parent">
+                              <div class="child1">
+                              <label for="startDate">시작일&nbsp;&nbsp;</label>        
+                              <input type="date" id="startDate" name="startDate" value="{{row.startdate}}" data-date-format="yymmdd">
+                              </div>
+                              <div class="child1">
+                              <label for="endDate">종료일&nbsp;&nbsp;</label>        
+                              <input type="date" id="endDate" name="endDate" value="{{row.enddate}}" data-date-format="yymmdd">
+                              </div>
+                            </div>
+            
+                            <div class="modal-footer">
+                                <button class="btn btn-info" type="submit">수정</button>
+                                <button class="btn btn-secondary" data-dismiss="modal">닫기</button>
+                            </div>
+            
+                        </form>
+                    </div>
+                </div>
+            </div>
           </div>
-        </div>
-      {% endfor %}
+        {% endfor %}
+      </tbody>
+    </table>
   </div>
-</div>  
-  {% endblock %}
-  
+</body>  
+{% endblock %}
