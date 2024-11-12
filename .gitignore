@@ -36,6 +36,7 @@ Thumbs.db
 
 # Log 파일
 *.log
+nohup.out
 
 # pyenv 관련 파일
 .python-version
